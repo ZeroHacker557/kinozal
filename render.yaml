@@ -1,0 +1,21 @@
+# Render Blueprint: bitta veb-servis (sayt + o'yin serveri). Render -> New -> Blueprint -> shu repo.
+services:
+  - type: web
+    name: kino-zal
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: node server/src/index.ts
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      # LiveKit Cloud kalitlari - Render so'raganda kiritiladi (repo'ga yozilmaydi)
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false

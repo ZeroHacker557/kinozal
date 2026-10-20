@@ -42,13 +42,14 @@ qolgan hammasi ishlaydi. `.env` o'zgarsa serverni qayta ishga tushiring (`--watc
 Server testlari: `node server/test/smoke.ts` (server ishlab turishi kerak).
 Sinov boti: `node server/test/bot.ts <XONA> <buyruq.json>` — fayldagi holatni (joy, poza, o'rindiq) yuborib turadi.
 
-## Deploy (Railway)
+## Deploy (Render)
 
-Bitta servis sayt va o'yin serverini birga beradi; sozlamalar `railway.json` da
-(build: `npm run build`, start: `node server/src/index.ts`, healthcheck: `/health`).
-Railway -> New Project -> Deploy from GitHub repo, so'ng **Variables** bo'limiga LiveKit Cloud kalitlari:
+Bitta bepul veb-servis sayt va o'yin serverini birga beradi; sozlamalar `render.yaml` da
+(build: `npm ci && npm run build`, start: `node server/src/index.ts`, healthcheck: `/health`).
+Render -> New -> Blueprint -> shu repo; Render LiveKit Cloud kalitlarini so'raydi:
 `LIVEKIT_URL` (`wss://....livekit.cloud`), `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`.
-Settings -> Networking -> Generate Domain bilan `https://...up.railway.app` manzili olinadi.
+Bepul tarifda 15 daqiqa kirilmasa servis uxlaydi — keyingi birinchi ochilish ~50 soniya.
+(`railway.json` — Railway'ga o'tilsa shu sozlama tayyor.)
 
 ## Ovoz qanday ishlaydi
 
