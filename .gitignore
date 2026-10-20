@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+
+# Blender vaqtinchalik fayllari
+*.blend1
+assets-src/blender/__pycache__/
+assets-src/out/
+# Rocketbox xom fayllari (~800 MB) - tools/fetch-rocketbox.mjs bilan qayta yuklanadi
+assets-src/rocketbox/
+*.tsbuildinfo

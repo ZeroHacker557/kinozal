@@ -1,0 +1,20 @@
+{
+  "name": "remote-screen",
+  "private": true,
+  "version": "0.1.0",
+  "description": "3D kino zal: do'stlar bilan birga ekran ulashib kino ko'rish",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "shared",
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w client",
+    "build": "npm run build -w client && node tools/precompress.mjs",
+    "start": "node server/src/index.ts",
+    "assets:hall": "powershell -ExecutionPolicy Bypass -File tools/build-hall.ps1"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "client",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js", "client", "--port", "5173", "--strictPort"],
+      "port": 5173
+    },
+    {
+      "name": "server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--watch", "server/src/index.ts"],
+      "port": 2567
+    }
+  ]
+}
