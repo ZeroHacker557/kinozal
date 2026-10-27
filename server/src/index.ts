@@ -10,9 +10,9 @@ import { fileURLToPath } from 'node:url';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { WebSocketServer, WebSocket } from 'ws';
 import {
-  PROTOCOL_VERSION, MAX_PLAYERS, STATE_RATE, AVATARS, POSES, ROOM_CODE_ALPHABET,
-  cleanNickname, isValidRoomCode,
-  type ClientMessage, type ServerMessage, type PlayerInfo, type PlayerState, type RoomInfo, type AvatarId, type Pose,
+  PROTOCOL_VERSION, MAX_PLAYERS, STATE_RATE, AVATARS, POSES, ROOM_CODE_ALPHABET, MAPS,
+  cleanNickname, isValidRoomCode, isMapId,
+  type ClientMessage, type ServerMessage, type PlayerInfo, type PlayerState, type RoomInfo, type AvatarId, type Pose, type MapId,
 } from '../../shared/src/protocol.ts';
 import { setSharePermission, voiceEnabled, voiceToken, voiceUrl } from './voice.ts';
 
@@ -20,9 +20,19 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PORT = Number(process.env.PORT ?? 2567);
 const DIST = join(ROOT, 'client', 'dist');
 
-// Mavjud o'rindiqlar (zal joylashuvidan)
-const layout = JSON.parse(readFileSync(join(ROOT, 'client', 'public', 'models', 'layout.json'), 'utf8'));
-const SEATS = new Set<string>(layout.seats.map((s: { id: string }) => s.id));
+type Vec3 = [number, number, number];
+interface MapLayout {
+  seats: Set<string>;
+  spawn: { position: Vec3; lookAt: Vec3; radius?: number };
+}
+
+// Har bir xaritaning o'rindiqlari va kirish joyi (Blender eksport qilgan layout.json'dan)
+const LAYOUTS = Object.fromEntries(
+  MAPS.map((m) => {
+    const raw = JSON.parse(readFileSync(join(ROOT, 'client', 'public', ...m.layout.split('/')), 'utf8'));
+    return [m.id, { seats: new Set<string>(raw.seats.map((s: { id: string }) => s.id)), spawn: raw.spawn }];
+  }),
+) as Record<MapId, MapLayout>;
 const AVATAR_IDS = new Set<string>(AVATARS.map((a) => a.id));
 
 interface Client {
@@ -65,10 +75,12 @@ function broadcast(room: Room, msg: ServerMessage, except?: string) {
   }
 }
 
-function spawnState(): PlayerState {
-  const [x, y, z] = layout.spawn.position as [number, number, number];
-  // Kirish eshigi oldida biroz tarqatib joylashtirish
-  return { p: [x + Math.random() * 0.6, y, z + (Math.random() - 0.5) * 1.2], ry: -Math.PI / 2, hy: -Math.PI / 2, hp: 0, g: 0, fl: false };
+function spawnState(map: MapId): PlayerState {
+  const { position: [x, y, z], lookAt: [lx, , lz], radius = 0.6 } = LAYOUTS[map].spawn;
+  // Kirish joyi atrofida biroz tarqatib joylashtirish
+  const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * radius;
+  const yaw = Math.atan2(-(lx - x), -(lz - z));
+  return { p: [x + Math.cos(a) * r, y, z + Math.sin(a) * r], ry: yaw, hy: yaw, hp: 0, g: 0, fl: false };
 }
 
 function sanitizeState(s: unknown): PlayerState | null {
@@ -137,12 +149,12 @@ function handleHello(ws: WebSocket, msg: ClientMessage): Client | null {
   if (msg.t === 'create') {
     const id = newRoomCode();
     room = {
-      info: { id, hostId: '', lightsOn: true, lightsHostOnly: false, presenterId: '', sharingId: null },
+      info: { id, mapId: isMapId(msg.map) ? msg.map : 'hall', hostId: '', lightsOn: true, lightsHostOnly: false, presenterId: '', sharingId: null },
       voiceRoom: `kino-${id}-${randomBytes(3).toString('hex')}`,
       clients: new Map(), seats: new Map(), lastActive: Date.now(),
     };
     rooms.set(id, room);
-    log(`xona yaratildi ${id}`);
+    log(`xona yaratildi ${id} (${room.info.mapId})`);
   } else {
     const code = String(msg.room).toUpperCase();
     room = isValidRoomCode(code) ? rooms.get(code) : undefined;
@@ -163,7 +175,7 @@ function handleHello(ws: WebSocket, msg: ClientMessage): Client | null {
     pose: null,
     poseAt: 0,
     joinedAt: Date.now(),
-    state: spawnState(),
+    state: spawnState(room.info.mapId),
   };
   const client: Client = { ws, info, room, alive: true, dirty: true };
   if (!room.info.hostId) room.info.hostId = room.info.presenterId = info.id;
@@ -191,7 +203,7 @@ function handle(c: Client, msg: ClientMessage) {
     }
     case 'sit': {
       const seat = String(msg.seat);
-      if (!SEATS.has(seat)) return send(c.ws, { t: 'error', code: 'bad_request', message: "Noto'g'ri o'rindiq" });
+      if (!LAYOUTS[room.info.mapId].seats.has(seat)) return send(c.ws, { t: 'error', code: 'bad_request', message: "Noto'g'ri o'rindiq" });
       const owner = room.seats.get(seat);
       if (owner && owner !== c.info.id) return send(c.ws, { t: 'error', code: 'seat_taken', message: 'Bu joy band' });
       leaveSeat(room, c);
@@ -253,7 +265,7 @@ function handle(c: Client, msg: ClientMessage) {
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.glb': 'model/gltf-binary', '.jpg': 'image/jpeg', '.png': 'image/png', '.exr': 'image/x-exr', '.svg': 'image/svg+xml',
-  '.wasm': 'application/wasm', '.woff2': 'font/woff2', '.webp': 'image/webp', '.ico': 'image/x-icon', '.txt': 'text/plain',
+  '.wasm': 'application/wasm', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.ktx2': 'image/ktx2', '.woff2': 'font/woff2', '.webp': 'image/webp', '.ico': 'image/x-icon', '.txt': 'text/plain',
 };
 
 function fileStat(file: string): Stats | null {

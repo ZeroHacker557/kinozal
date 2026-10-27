@@ -1,10 +1,11 @@
-import { Component, Suspense, useState, type ReactNode } from 'react';
+import { Component, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useGame } from './state/store';
 import { World } from './scene/World';
 import { Overlay } from './ui/Overlay';
 import { useScreen } from './screen/screenStore';
 import { useRoom } from './net/roomStore';
+import { useActiveMap } from './scene/mapContext';
 
 /** Dev sinovi: ?lite=1 - 3D sahnasiz (faqat tarmoq va ovoz), ikkinchi "do'st" sifatida ochish uchun */
 const LITE = import.meta.env.DEV && new URLSearchParams(location.search).has('lite');
@@ -44,6 +45,9 @@ export default function App() {
   // To'liq ekran rejimida 3D zal chizilmaydi - videokarta video uchun bo'shaydi
   const fullscreen = useScreen((s) => s.fullscreen);
   const [lost, setLost] = useState(false);
+  const map = useActiveMap();
+  // Yangi xarita yuklanib, shaderlari tayyor bo'lguncha yuklanish ekrani ko'rsatiladi
+  useEffect(() => useGame.getState().setSceneReady(false), [map]);
   if (LITE) return <Overlay />;
   const dpr: [number, number] = quality === 'low' ? [0.6, 0.85] : quality === 'medium' ? [1, 1] : [1, 1.5];
 

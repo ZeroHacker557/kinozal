@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
@@ -20,6 +20,11 @@ import { Flashlights } from '../player/Flashlight';
 import { VoiceSpatial } from '../voice/VoiceSpatial';
 import { AvatarRig } from '../avatar/AvatarRig';
 import { loadAvatar } from '../avatar/assets';
+import { useActiveMap } from './mapContext';
+import type { MapId } from '@shared/protocol.ts';
+
+// O'rmon xaritasi alohida bo'lak (chunk) - faqat tanlanganda yuklanadi
+const Forest = lazy(() => import('./forest/Forest'));
 
 const DOWNLIGHTS: [number, number][] = [];
 for (const x of [-6, -2, 2, 6]) for (const z of [8.8, 5.2, 1.6, -2, -5.6, -9.2]) DOWNLIGHTS.push([x, z]);
@@ -128,29 +133,58 @@ function DebugExpose() {
   return null;
 }
 
-export function World() {
+/** Har bir xaritada bir xil: player, boshqa avatarlar, fonarlar, ovoz, interaktivlik */
+function Actors() {
+  return (
+    <>
+      <Player />
+      <RemotePlayers />
+      <Flashlights />
+      <VoiceSpatial />
+      <Interaction />
+    </>
+  );
+}
+
+function HallMap() {
+  return (
+    <>
+      <color attach="background" args={['#000000']} />
+      <HallEnvironment />
+      <HallColliders />
+      <Hall>
+        <Seats />
+        <Screen />
+        <LightSwitch />
+        <ProjectorBeam />
+        <LightingController />
+        <Actors />
+      </Hall>
+    </>
+  );
+}
+
+function MapWorld({ map }: { map: MapId }) {
   return (
     <>
       <DebugExpose />
-      <color attach="background" args={['#000000']} />
-      <HallEnvironment />
       <Physics timeStep="vary" gravity={[0, -9.81, 0]}>
-        <HallColliders />
-        <Hall>
-          <Seats />
-          <Screen />
-          <LightSwitch />
-          <ProjectorBeam />
-          <LightingController />
-          <Player />
-          <RemotePlayers />
-          <Flashlights />
-          <VoiceSpatial />
-          <Interaction />
-        </Hall>
+        {map === 'forest' ? (
+          <Forest>
+            <Actors />
+          </Forest>
+        ) : (
+          <HallMap />
+        )}
       </Physics>
       <Effects />
       <Precompile />
     </>
   );
+}
+
+export function World() {
+  const map = useActiveMap();
+  // Xarita almashsa butun sahna (fizika, shaderlar, yuklanish) noldan quriladi
+  return <MapWorld key={map} map={map} />;
 }

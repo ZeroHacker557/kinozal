@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { CapsuleCollider, RigidBody, useRapier, type RapierRigidBody, type RapierCollider } from '@react-three/rapier';
 import { useGame } from '../state/store';
-import { useHall } from '../scene/Hall';
+import { useMap, seatYaw } from '../scene/mapContext';
 import { input, installInput, consumePress, consumeRelease } from './input';
 import { playFootstep, playFlashlightClick } from '../audio/sfx';
 import { requestPose, requestStand, sendState } from '../net/net';
@@ -20,7 +20,7 @@ const RUN = 3.6;
 const ACCEL = 10;
 const GRAVITY = 9.81;
 const MOUSE_SENS = 0.0021;
-/** O'rindiqda ko'z joylashuvi (o'rindiq markaziga nisbatan; o'rindiq -Z ga, ekranga qaragan) */
+/** O'rindiqda ko'z joylashuvi (o'rindiq markaziga nisbatan, o'rindiq yo'nalishi -Z deb olinganda) */
 const SEAT_EYE = new THREE.Vector3(0, 1.17, -0.12);
 /** O'rindiqdan turganda oyoq qo'yish joyi (oldinda) */
 const SEAT_EXIT = -0.62;
@@ -36,6 +36,12 @@ export const localPlayer = {
   gait: 0 as Gait,
 };
 
+/** Vektorni o'rindiq yo'nalishiga burish (yaw 0 -> -Z) */
+function rotateYaw(v: THREE.Vector3, yaw: number, out: THREE.Vector3) {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  return out.set(v.x * c + v.z * s, v.y, -v.x * s + v.z * c);
+}
+
 function angleDiff(a: number, b: number) {
   let d = a - b;
   while (d > Math.PI) d -= Math.PI * 2;
@@ -45,7 +51,7 @@ function angleDiff(a: number, b: number) {
 
 /** Birinchi shaxs kamerasi: yurish, o'rindiqda o'tirish, harakatlar (poza), fonar. */
 export function Player() {
-  const { layout } = useHall();
+  const map = useMap();
   const { world } = useRapier();
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
@@ -67,17 +73,17 @@ export function Player() {
     wheel: new THREE.Vector2(),
   });
 
-  const seatById = useMemo(() => new Map(layout.seats.map((s) => [s.id, s])), [layout]);
+  const seatById = useMemo(() => new Map(map.seats.map((s) => [s.id, s])), [map]);
 
   const spawn = useMemo(() => {
-    const [x, y, z] = layout.spawn.position;
-    const [lx, , lz] = layout.spawn.lookAt;
+    const [x, y, z] = map.spawn.position;
+    const [lx, , lz] = map.spawn.lookAt;
     state.current.yaw = Math.atan2(-(lx - x), -(lz - z));
     state.current.bodyYaw = state.current.yaw;
     state.current.camY = y + EYE_HEIGHT;
     state.current.camPos.set(x, y + EYE_HEIGHT, z);
     return [x, y + CENTER_TO_FEET + 0.05, z] as [number, number, number];
-  }, [layout]);
+  }, [map]);
 
   const controllerRef = useRef<ReturnType<typeof world.createCharacterController> | null>(null);
   useEffect(() => {
@@ -129,6 +135,7 @@ export function Player() {
   const right = useMemo(() => new THREE.Vector3(), []);
   const wish = useMemo(() => new THREE.Vector3(), []);
   const target = useMemo(() => new THREE.Vector3(), []);
+  const tmpSeat = useMemo(() => new THREE.Vector3(), []);
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, 'YXZ'), []);
 
   useFrame((_, rawDt) => {
@@ -182,20 +189,21 @@ export function Player() {
 
     // ---------------------------------------------------------------- o'rindiqda o'tirish
     if (seat) {
+      const sy = seatYaw(seat);
       if (s.seatedIn !== seat.id) {
         s.seatedIn = seat.id;
-        s.yaw = 0; // o'tirganda ekranga qaraladi
+        s.yaw = sy; // o'tirganda o'rindiq yo'nalishiga (ekranga) qaraladi
         s.pitch = 0.05;
       }
-      s.yaw = THREE.MathUtils.clamp(angleDiff(s.yaw, 0), -SEAT_YAW_LIMIT, SEAT_YAW_LIMIT);
+      s.yaw = sy + THREE.MathUtils.clamp(angleDiff(s.yaw, sy), -SEAT_YAW_LIMIT, SEAT_YAW_LIMIT);
       s.pitch = THREE.MathUtils.clamp(s.pitch, -1.0, 1.2);
       if (playing && (consumePress('KeyE') || consumePress('Space') || wantsMove)) {
         requestStand();
       }
       const [x, y, z] = seat.position;
-      target.set(x + SEAT_EYE.x, y + SEAT_EYE.y, z + SEAT_EYE.z);
+      rotateYaw(SEAT_EYE, sy, target).add(tmpSeat.set(x, y, z));
       s.camPos.lerp(target, 1 - Math.exp(-6 * dt));
-      s.bodyYaw = 0;
+      s.bodyYaw = sy;
       localPlayer.feet.set(x, y, z);
       localPlayer.gait = 0;
       applyCamera(0);
@@ -207,7 +215,8 @@ export function Player() {
       s.seatedIn = null;
       if (prev) {
         const [x, y, z] = prev.position;
-        teleport(x, y, z + SEAT_EXIT);
+        const py = seatYaw(prev);
+        teleport(x + Math.sin(py) * SEAT_EXIT, y, z + Math.cos(py) * SEAT_EXIT);
         s.camY = y + SEAT_EYE.y;
         return;
       }

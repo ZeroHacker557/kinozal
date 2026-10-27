@@ -1,6 +1,6 @@
 import {
   PROTOCOL_VERSION, STATE_RATE,
-  type AvatarId, type ClientMessage, type PlayerInfo, type PlayerState, type Pose, type ServerMessage,
+  type AvatarId, type MapId, type ClientMessage, type PlayerInfo, type PlayerState, type Pose, type ServerMessage,
 } from '@shared/protocol.ts';
 import { useRoom, type PlayerMeta } from './roomStore';
 import { pushSnapshot, dropPlayer } from './interp';
@@ -109,7 +109,7 @@ function onMessage(msg: ServerMessage) {
 }
 
 /** Serverga ulanish: yangi xona yaratish yoki kod bo'yicha qo'shilish. */
-export function connect(opts: { create: true } | { room: string }, nickname: string, avatar: AvatarId): Promise<void> {
+export function connect(opts: { create: MapId } | { room: string }, nickname: string, avatar: AvatarId): Promise<void> {
   disconnect();
   useRoom.getState().set({ status: 'connecting', error: null, players: {}, room: null, selfId: null });
   return new Promise((resolve, reject) => {
@@ -126,7 +126,7 @@ export function connect(opts: { create: true } | { room: string }, nickname: str
     sock.onopen = () => {
       const hello: ClientMessage =
         'create' in opts
-          ? { t: 'create', nickname, avatar, v: PROTOCOL_VERSION }
+          ? { t: 'create', nickname, avatar, map: opts.create, v: PROTOCOL_VERSION }
           : { t: 'join', room: opts.room, nickname, avatar, v: PROTOCOL_VERSION };
       sock.send(JSON.stringify(hello));
     };

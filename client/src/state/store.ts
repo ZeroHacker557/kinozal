@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { input } from '../player/input';
-import { AVATARS, type AvatarId, type Pose } from '@shared/protocol.ts';
+import { AVATARS, MAPS, type AvatarId, type MapId, type Pose } from '@shared/protocol.ts';
 
 export type Quality = 'low' | 'medium' | 'high';
 export type Phase = 'menu' | 'playing' | 'paused';
@@ -36,6 +36,9 @@ interface GameState {
   setNickname: (n: string) => void;
   avatar: AvatarId;
   setAvatar: (a: AvatarId) => void;
+  /** Menyuda tanlangan xarita (yangi xona yaratish va yolg'iz kirish uchun) */
+  map: MapId;
+  setMap: (m: MapId) => void;
 
   /** Zal chiroqlari yoqilganmi (devordagi tugma). Online rejimda server boshqaradi. */
   lightsOn: boolean;
@@ -95,6 +98,12 @@ export const useGame = create<GameState>((set) => ({
   setAvatar: (avatar) => {
     save('avatar', avatar);
     set({ avatar });
+  },
+
+  map: load('map', MAPS.map((m) => m.id), 'hall'),
+  setMap: (map) => {
+    save('map', map);
+    set({ map, seat: null, pose: null });
   },
 
   lightsOn: true,

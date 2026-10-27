@@ -16,6 +16,8 @@ export interface AvatarDrive {
   gait: number;
   speed: number;
   seated: boolean;
+  /** O'tirgan o'rindiq yo'nalishi (yaw) */
+  seatYaw: number;
   pose: Pose | null;
   poseAt: number;
 }
@@ -255,7 +257,7 @@ export class AvatarRig {
     if (d.seated) {
       // Mocap'dagi stul joyi bizning o'rindiqdan farq qiladi - tos suyagi o'lchanib, tuzatma qo'shiladi
       this.root.position.copy(d.pos).add(this.seatFix);
-      this.root.rotation.set(0, Math.PI, 0);
+      this.root.rotation.set(0, d.seatYaw + Math.PI, 0);
     } else {
       this.seatFix.set(0, 0, 0);
       this.root.position.copy(d.pos);
@@ -307,7 +309,7 @@ export class AvatarRig {
       if (d.seated && this.pelvis) {
         // Tos suyagini o'rindiq yostig'iga "o'tqazish" (silliq yaqinlashadi)
         this.pelvis.getWorldPosition(this.tmpV);
-        this.tmpTarget.copy(d.pos).add(SEAT_PELVIS).sub(this.tmpV);
+        this.tmpTarget.copy(SEAT_PELVIS).applyAxisAngle(UP, d.seatYaw).add(d.pos).sub(this.tmpV);
         this.seatFix.addScaledVector(this.tmpTarget, 1 - Math.exp(-12 * dt));
         this.root.position.copy(d.pos).add(this.seatFix);
         this.root.updateMatrixWorld(true);
@@ -342,12 +344,12 @@ export class AvatarRig {
 
   private applyHeadLook(dt: number, d: AvatarDrive) {
     const allow = !(d.pose === 'lie' || d.pose === 'dance' || d.pose === 'dance2');
-    const yawRef = d.seated ? 0 : d.bodyYaw;
+    const yawRef = d.seated ? d.seatYaw : d.bodyYaw;
     const ty = allow ? THREE.MathUtils.clamp(angleDiff(d.headYaw, yawRef), -1.2, 1.2) : 0;
     const tp = allow ? THREE.MathUtils.clamp(d.headPitch, -0.7, 0.6) : 0;
     this.lookYaw = THREE.MathUtils.damp(this.lookYaw, ty, 10, dt);
     this.lookPitch = THREE.MathUtils.damp(this.lookPitch, tp, 10, dt);
-    const forwardYaw = (d.seated ? 0 : d.bodyYaw) + this.lookYaw;
+    const forwardYaw = yawRef + this.lookYaw;
     // Oldinga yo'nalish (o'yin konvensiyasi: yaw 0 -> -Z)
     const fx = -Math.sin(forwardYaw), fz = -Math.cos(forwardYaw);
     this.axis.set(fx, 0, fz).cross(UP).normalize(); // F x Y: musbat burchak - yuqoriga

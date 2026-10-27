@@ -36,7 +36,7 @@ const a = client('A');
 const b = client('B');
 await Promise.all([a.open, b.open]);
 
-a.send({ t: 'create', nickname: 'Ali', avatar: 'Male_Adult_02', v: PROTOCOL_VERSION });
+a.send({ t: 'create', nickname: 'Ali', avatar: 'Male_Adult_02', map: 'hall', v: PROTOCOL_VERSION });
 const wa = await a.wait('welcome');
 assert(wa.room.hostId === wa.selfId, 'yaratuvchi xona egasi');
 

@@ -8,6 +8,7 @@ import { loadLayout, type HallLayout } from './layout';
 import { createHallMaterials, groupTextures, texturePaths, type EmissiveSet } from './materials';
 import { hallUniforms } from './lighting';
 import { LightProbeField } from './probes';
+import { MapContext, type MapData } from './mapContext';
 
 const LIGHTMAPS = ['/lightmaps/house.exr', '/lightmaps/base.exr', '/lightmaps/screen.exr'];
 
@@ -103,11 +104,23 @@ export function Hall({ children }: { children?: ReactNode }) {
     [layout, base, emissive],
   );
 
+  const map = useMemo<MapData>(
+    () => ({
+      id: 'hall',
+      seats: layout.seats,
+      spawn: layout.spawn,
+      lookupLight: (x, z, out) => base.probes.lookup(x, z, out),
+    }),
+    [layout, base],
+  );
+
   return (
-    <HallContext value={data}>
-      <primitive object={gltf.scene} />
-      {children}
-    </HallContext>
+    <MapContext value={map}>
+      <HallContext value={data}>
+        <primitive object={gltf.scene} />
+        {children}
+      </HallContext>
+    </MapContext>
   );
 }
 

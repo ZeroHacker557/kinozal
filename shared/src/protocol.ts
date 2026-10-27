@@ -3,10 +3,21 @@
  * Faqat "o'chiriladigan" TypeScript sintaksisi (enum yo'q) - Node 24 uni to'g'ridan-to'g'ri ishga tushiradi.
  */
 
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 export const MAX_PLAYERS = 20;
 /** Holat yuborish chastotasi (Hz) */
 export const STATE_RATE = 15;
+
+/** Xaritalar: xona yaratilganda egasi tanlaydi, keyin o'zgarmaydi */
+export const MAPS = [
+  { id: 'hall', label: 'Kino zal', layout: '/models/layout.json' },
+  { id: 'forest', label: "Qorong'u o'rmon", layout: '/maps/forest/layout.json' },
+] as const;
+export type MapId = (typeof MAPS)[number]['id'];
+
+export function isMapId(v: unknown): v is MapId {
+  return MAPS.some((m) => m.id === v);
+}
 
 export const AVATARS = [
   { id: 'Female_Adult_01', gender: 'f', label: 'Malika' },
@@ -62,6 +73,7 @@ export interface PlayerInfo {
 
 export interface RoomInfo {
   id: string;
+  mapId: MapId;
   hostId: string;
   lightsOn: boolean;
   /** true - chiroq tugmasini faqat xona egasi bosa oladi */
@@ -74,7 +86,7 @@ export interface RoomInfo {
 
 // ---------------------------------------------------------------- client -> server
 export type ClientMessage =
-  | { t: 'create'; nickname: string; avatar: AvatarId; v: number }
+  | { t: 'create'; nickname: string; avatar: AvatarId; map: MapId; v: number }
   | { t: 'join'; room: string; nickname: string; avatar: AvatarId; v: number }
   | { t: 'state'; s: PlayerState }
   | { t: 'sit'; seat: string }

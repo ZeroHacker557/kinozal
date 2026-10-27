@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProgress } from '@react-three/drei';
-import { AVATARS, isValidRoomCode, MAX_PLAYERS } from '@shared/protocol.ts';
+import { AVATARS, MAPS, isValidRoomCode, MAX_PLAYERS } from '@shared/protocol.ts';
+import { useActiveMap } from '../scene/mapContext';
 import { useGame, type Quality } from '../state/store';
 import { input } from '../player/input';
 import { POSE_MENU } from '../player/poses';
@@ -64,11 +65,12 @@ function Controls() {
 function Loading() {
   const { progress } = useProgress();
   const ready = useGame((s) => s.sceneReady);
+  const map = useActiveMap();
   if (ready) return null;
   const compiling = progress >= 100;
   return (
     <div className="loading">
-      <div className="loading-title">Zal tayyorlanmoqda</div>
+      <div className="loading-title">{MAPS.find((m) => m.id === map)?.label} tayyorlanmoqda</div>
       <div className="bar">
         <div className={compiling ? 'indeterminate' : ''} style={{ width: compiling ? '35%' : `${progress}%` }} />
       </div>
@@ -91,6 +93,21 @@ function AvatarPicker() {
   );
 }
 
+function MapPicker() {
+  const map = useGame((s) => s.map);
+  const setMap = useGame((s) => s.setMap);
+  return (
+    <div className="maps">
+      {MAPS.map((m) => (
+        <button key={m.id} className={`map-card ${m.id === map ? 'active' : ''}`} onClick={() => setMap(m.id)}>
+          <span className={`map-thumb map-${m.id}`} />
+          <span>{m.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Lobby() {
   const nickname = useGame((s) => s.nickname);
   const setNickname = useGame((s) => s.setNickname);
@@ -102,7 +119,7 @@ function Lobby() {
 
   const go = (mode: 'create' | 'join' | 'offline') => {
     if (busy) return;
-    const { nickname, avatar } = useGame.getState();
+    const { nickname, avatar, map } = useGame.getState();
     // Pointer lock foydalanuvchi bosishi ichida so'ralishi shart - ulanishni kutmasdan
     lockPointer();
     if (mode === 'offline') {
@@ -110,7 +127,7 @@ function Lobby() {
       useRoom.getState().set({ status: 'offline', error: null, room: null, selfId: null, players: {} });
       return;
     }
-    connect(mode === 'create' ? { create: true } : { room: code }, nickname, avatar).catch(() => {
+    connect(mode === 'create' ? { create: map } : { room: code }, nickname, avatar).catch(() => {
       document.exitPointerLock?.();
       useGame.getState().setPhase('menu');
     });
@@ -138,6 +155,10 @@ function Lobby() {
         <div className="field">
           <span>Personaj</span>
           <AvatarPicker />
+        </div>
+        <div className="field">
+          <span>Xarita (yangi xona uchun)</span>
+          <MapPicker />
         </div>
         <div className="join-row">
           <input
@@ -197,7 +218,7 @@ function RoomPanel() {
       </div>
       <div className="players">
         <span>
-          Zalda {list.length} / {MAX_PLAYERS}
+          {MAPS.find((m) => m.id === room.mapId)?.label} · {list.length} / {MAX_PLAYERS}
         </span>
         {list.map((p) => (
           <div key={p.id} className="player-row">

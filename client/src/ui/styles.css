@@ -150,6 +150,18 @@ button { font-family: inherit; cursor: pointer; }
 .avatar:hover { transform: translateY(-2px); }
 .avatar.active { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(216, 166, 87, 0.2); }
 @media (max-width: 420px) { .avatars { grid-template-columns: repeat(4, 1fr); } }
+.maps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.map-card {
+  display: flex; flex-direction: column; gap: 6px; padding: 6px 6px 8px; border: 2px solid transparent; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04); color: inherit; font-size: 13px; text-align: left;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.map-card:hover { transform: translateY(-2px); }
+.map-card.active { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(216, 166, 87, 0.2); }
+.map-thumb { display: block; aspect-ratio: 16 / 7; border-radius: 8px; background-size: cover; background-position: center; }
+/* Haqiqiy skrinshotlar keyingi bosqichlarda qo'yiladi */
+.map-hall { background-image: radial-gradient(ellipse at 50% 30%, #6a7390 0%, #1c1e28 45%, #07070a 100%); }
+.map-forest { background-image: radial-gradient(circle at 78% 22%, #dfe6f5 0 5%, transparent 6%), radial-gradient(ellipse at 50% 100%, #b4561e 0%, #2a160c 25%, transparent 45%), linear-gradient(180deg, #0c1424 0%, #070a12 70%, #050608 100%); }
 
 .join-row { display: flex; gap: 8px; }
 .join-row .code {

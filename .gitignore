@@ -12,3 +12,6 @@ assets-src/out/
 # Rocketbox xom fayllari (~800 MB) - tools/fetch-rocketbox.mjs bilan qayta yuklanadi
 assets-src/rocketbox/
 *.tsbuildinfo
+
+# Sketchfab ritsar xom fayllari (CC-BY, by__Rx) - qayta ishlangani client/public ga chiqadi
+assets-src/knight/
