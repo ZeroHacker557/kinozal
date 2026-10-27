@@ -1,17 +1,21 @@
 import { use, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { CuboidCollider, RigidBody, CylinderCollider } from '@react-three/rapier';
+import { RigidBody, CylinderCollider } from '@react-three/rapier';
 import { loadJson, type SeatInfo, type Vec3 } from '../layout';
 import { MapContext, type MapData } from '../mapContext';
 import { hallUniforms } from '../lighting';
 import { interactables } from '../../interaction/interactables';
 import { requestSit } from '../../net/net';
 import { seatOwner, useRoom } from '../../net/roomStore';
+import { loadTerrain } from './terrainData';
+import { Terrain, TerrainColliders } from './Terrain';
+import { Water } from './Water';
+import { Bridge } from './Bridge';
 
 /**
- * "Qorong'u o'rmon" xaritasi. 1-bosqich: vaqtinchalik sahna (tekis yer, oddiy to'nkalar va gulxan o'rni) -
- * xarita tizimini sinash uchun. Relyef, o'rmon, qasr va yorug'lik keyingi bosqichlarda Blender'dan keladi.
+ * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy, gulxan maydoni.
+ * To'nkalar, gulxan va ekran hozircha vaqtinchalik - keyingi bosqichlarda Blender modellari bilan almashadi.
  */
 
 export interface LogInfo {
@@ -161,7 +165,7 @@ function SkyAndFog() {
     camera.near = 0.08;
     camera.far = 2500;
     camera.updateProjectionMatrix();
-    scene.fog = new THREE.FogExp2(NIGHT, 0.012);
+    scene.fog = new THREE.FogExp2(NIGHT, 0.0045);
     return () => {
       camera.near = prev.near;
       camera.far = prev.far;
@@ -174,6 +178,7 @@ function SkyAndFog() {
 
 export function Forest({ children }: { children?: ReactNode }) {
   const layout = use(loadJson<ForestLayout>('/maps/forest/layout.json'));
+  const terrain = use(loadTerrain());
 
   const map = useMemo<MapData>(
     () => ({
@@ -202,13 +207,10 @@ export function Forest({ children }: { children?: ReactNode }) {
         <sphereGeometry args={[28, 32, 16]} />
         <meshBasicMaterial color="#e8ecf5" toneMapped={false} fog={false} />
       </mesh>
-      <mesh rotation-x={-Math.PI / 2} receiveShadow>
-        <planeGeometry args={[500, 500]} />
-        <meshStandardMaterial color="#1b2016" roughness={1} />
-      </mesh>
-      <RigidBody type="fixed" colliders={false}>
-        <CuboidCollider args={[250, 0.5, 250]} position={[0, -0.5, 0]} />
-      </RigidBody>
+      <Terrain data={terrain} />
+      <TerrainColliders data={terrain} />
+      <Water stream={terrain.meta.stream} />
+      <Bridge bridge={terrain.meta.bridge} />
       <Campfire position={layout.fire} />
       <Logs layout={layout} />
       <ScreenStand screen={layout.screen} />

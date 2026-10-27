@@ -10,7 +10,7 @@ import { brotliCompressSync, gzipSync, constants } from 'node:zlib';
 
 const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'client', 'dist');
 /** Siqiladigan turlar (jpg/png/exr allaqachon siqilgan) */
-const TYPES = new Set(['.js', '.css', '.html', '.json', '.svg', '.glb', '.wasm', '.txt']);
+const TYPES = new Set(['.js', '.css', '.html', '.json', '.svg', '.glb', '.wasm', '.txt', '.bin']);
 
 let before = 0, after = 0, count = 0;
 

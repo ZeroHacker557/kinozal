@@ -5,15 +5,23 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const outDir = join(root, 'client', 'public', 'textures');
+const HALL = join(root, 'client', 'public', 'textures');
+const FOREST = join(root, 'client', 'public', 'maps', 'forest', 'textures');
 
-// id -> qaysi material uchun ishlatiladi
+// id -> qayerga va qaysi material uchun
 const TEXTURES = {
-  velour_velvet: "o'rindiq va parda baxmali",
-  wool_boucle: 'gilam tolasi',
-  hessian_380: 'akustik devor panellari',
-  dark_wood: "yog'och bezaklar",
-  concrete_floor_painted: "sahna oldi va ship",
+  velour_velvet: [HALL, "o'rindiq va parda baxmali"],
+  wool_boucle: [HALL, 'gilam tolasi'],
+  hessian_380: [HALL, 'akustik devor panellari'],
+  dark_wood: [HALL, "yog'och bezaklar"],
+  concrete_floor_painted: [HALL, "sahna oldi va ship"],
+  // O'rmon relyefi qatlamlari (splat: R o'tloq, G o'rmon tagi, B yo'l/loy, A qoya)
+  forrest_ground_01: [FOREST, "o'tloq"],
+  forest_leaves_02: [FOREST, "o'rmon tagi (moxli barglar)"],
+  forest_ground_04: [FOREST, "yo'l va soy bo'yi loyi"],
+  mossy_rock: [FOREST, 'qoyalar'],
+  rough_wood: [FOREST, "eskirgan taxta (ko'prik, to'nkalar)"],
+  bark_brown_02: [FOREST, "moxli po'stloq (xodalar, bargli daraxtlar)"],
 };
 
 // Poly Haven fayl kalitlari -> bizdagi nom
@@ -24,7 +32,7 @@ async function exists(p) {
   try { await access(p); return true; } catch { return false; }
 }
 
-for (const [id, purpose] of Object.entries(TEXTURES)) {
+for (const [id, [outDir, purpose]] of Object.entries(TEXTURES)) {
   const res = await fetch(`https://api.polyhaven.com/files/${id}`);
   if (!res.ok) throw new Error(`${id}: ${res.status}`);
   const files = await res.json();

@@ -82,8 +82,11 @@ class MeshBuilder:
                 drop.append(f)
         if bevel > 0 and not drop:
             edges = list({e for f in faces for e in f.edges})
-            bmesh.ops.bevel(self.bm, geom=edges, offset=bevel, offset_type='OFFSET',
-                            segments=segments, profile=0.5, affect='EDGES', clamp_overlap=True)
+            res = bmesh.ops.bevel(self.bm, geom=edges, offset=bevel, offset_type='OFFSET',
+                                  segments=segments, profile=0.5, affect='EDGES', clamp_overlap=True)
+            # Faska yuzalari asosiy materialni olsin (aks holda 0-slot materiali tushib qoladi)
+            for f in res['faces']:
+                f.material_index = base
         if drop:
             bmesh.ops.delete(self.bm, geom=drop, context='FACES_ONLY')
         if inward:

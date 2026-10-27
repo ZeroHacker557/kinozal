@@ -265,7 +265,7 @@ function handle(c: Client, msg: ClientMessage) {
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.glb': 'model/gltf-binary', '.jpg': 'image/jpeg', '.png': 'image/png', '.exr': 'image/x-exr', '.svg': 'image/svg+xml',
-  '.wasm': 'application/wasm', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.ktx2': 'image/ktx2', '.woff2': 'font/woff2', '.webp': 'image/webp', '.ico': 'image/x-icon', '.txt': 'text/plain',
+  '.wasm': 'application/wasm', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.ktx2': 'image/ktx2', '.bin': 'application/octet-stream', '.woff2': 'font/woff2', '.webp': 'image/webp', '.ico': 'image/x-icon', '.txt': 'text/plain',
 };
 
 function fileStat(file: string): Stats | null {
