@@ -9,6 +9,7 @@ import { Water } from './Water';
 import { Bridge } from './Bridge';
 import { Camp, ScreenGlow } from './Camp';
 import { Fire } from './Fire';
+import { Nature } from './Nature';
 
 /**
  * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy va ko'prik,
@@ -88,6 +89,7 @@ export function Forest({ children }: { children?: ReactNode }) {
       <TerrainColliders data={terrain} />
       <Water stream={terrain.meta.stream} />
       <Bridge bridge={terrain.meta.bridge} />
+      <Nature />
       <Camp seats={layout.seats} screen={layout.screen} />
       <Fire position={layout.fire} />
       <ScreenGlow center={layout.screen.center} />

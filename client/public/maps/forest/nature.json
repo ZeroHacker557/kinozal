@@ -1,0 +1,388 @@
+{
+ "stride": 5,
+ "variants": [
+  {
+   "name": "boulder",
+   "group": "rock",
+   "offset": 0,
+   "count": 129,
+   "size": [
+    1.277,
+    1.797,
+    0.996
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.683,
+    "height": 0.996
+   }
+  },
+  {
+   "name": "branches_a",
+   "group": "plant",
+   "offset": 129,
+   "count": 372,
+   "size": [
+    0.324,
+    1.298,
+    0.341
+   ]
+  },
+  {
+   "name": "branches_b",
+   "group": "plant",
+   "offset": 501,
+   "count": 350,
+   "size": [
+    0.15,
+    1.039,
+    0.141
+   ]
+  },
+  {
+   "name": "bush_a",
+   "group": "plant",
+   "offset": 851,
+   "count": 749,
+   "size": [
+    0.582,
+    0.143,
+    0.222
+   ]
+  },
+  {
+   "name": "dead_a",
+   "group": "tree",
+   "offset": 1600,
+   "count": 178,
+   "size": [
+    1,
+    1,
+    1
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.26,
+    "height": 4.0
+   }
+  },
+  {
+   "name": "fern_a",
+   "group": "plant",
+   "offset": 1778,
+   "count": 2703,
+   "size": [
+    0.992,
+    0.89,
+    0.434
+   ]
+  },
+  {
+   "name": "fern_b",
+   "group": "plant",
+   "offset": 4481,
+   "count": 2768,
+   "size": [
+    0.876,
+    0.764,
+    0.351
+   ]
+  },
+  {
+   "name": "fern_c",
+   "group": "plant",
+   "offset": 7249,
+   "count": 1671,
+   "size": [
+    0.555,
+    0.613,
+    0.286
+   ]
+  },
+  {
+   "name": "fern_d",
+   "group": "plant",
+   "offset": 8920,
+   "count": 1610,
+   "size": [
+    0.573,
+    0.59,
+    0.213
+   ]
+  },
+  {
+   "name": "fir_a",
+   "group": "tree",
+   "offset": 10530,
+   "count": 1180,
+   "size": [
+    1,
+    1,
+    1
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.34,
+    "height": 4.0
+   }
+  },
+  {
+   "name": "fir_b",
+   "group": "tree",
+   "offset": 11710,
+   "count": 1560,
+   "size": [
+    1,
+    1,
+    1
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.24,
+    "height": 4.0
+   }
+  },
+  {
+   "name": "grass",
+   "group": "plant",
+   "offset": 13270,
+   "count": 14066,
+   "size": [
+    0.6,
+    0.6,
+    0.5
+   ]
+  },
+  {
+   "name": "log_a",
+   "group": "wood",
+   "offset": 27336,
+   "count": 26,
+   "size": [
+    3.046,
+    0.276,
+    0.293
+   ],
+   "collider": {
+    "shape": "box",
+    "half": [
+     1.371,
+     0.146,
+     0.083
+    ]
+   }
+  },
+  {
+   "name": "log_b",
+   "group": "wood",
+   "offset": 27362,
+   "count": 33,
+   "size": [
+    4.053,
+    1.045,
+    1.047
+   ],
+   "collider": {
+    "shape": "box",
+    "half": [
+     1.824,
+     0.523,
+     0.314
+    ]
+   }
+  },
+  {
+   "name": "mushrooms",
+   "group": "plant",
+   "offset": 27395,
+   "count": 115,
+   "size": [
+    0.5,
+    0.5,
+    0.2
+   ]
+  },
+  {
+   "name": "pine_a",
+   "group": "tree",
+   "offset": 27510,
+   "count": 618,
+   "size": [
+    1,
+    1,
+    1
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.32,
+    "height": 4.0
+   }
+  },
+  {
+   "name": "plant_a",
+   "group": "plant",
+   "offset": 28128,
+   "count": 1132,
+   "size": [
+    0.2,
+    0.152,
+    0.403
+   ]
+  },
+  {
+   "name": "plant_b",
+   "group": "plant",
+   "offset": 29260,
+   "count": 1063,
+   "size": [
+    0.185,
+    0.123,
+    0.352
+   ]
+  },
+  {
+   "name": "rock_a",
+   "group": "rock",
+   "offset": 30323,
+   "count": 33,
+   "size": [
+    1.207,
+    0.974,
+    0.517
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.459,
+    "height": 0.517
+   }
+  },
+  {
+   "name": "rock_b",
+   "group": "rock",
+   "offset": 30356,
+   "count": 19,
+   "size": [
+    2.195,
+    1.549,
+    0.76
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.834,
+    "height": 0.76
+   }
+  },
+  {
+   "name": "rock_big_a",
+   "group": "rock",
+   "offset": 30375,
+   "count": 138,
+   "size": [
+    2.244,
+    3.356,
+    1.478
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 1.275,
+    "height": 1.478
+   }
+  },
+  {
+   "name": "rock_big_b",
+   "group": "rock",
+   "offset": 30513,
+   "count": 147,
+   "size": [
+    2.139,
+    1.958,
+    1.764
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.813,
+    "height": 1.764
+   }
+  },
+  {
+   "name": "rock_big_c",
+   "group": "rock",
+   "offset": 30660,
+   "count": 129,
+   "size": [
+    2.119,
+    2.764,
+    1.253
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 1.05,
+    "height": 1.253
+   }
+  },
+  {
+   "name": "rock_c",
+   "group": "rock",
+   "offset": 30789,
+   "count": 22,
+   "size": [
+    1.974,
+    1.535,
+    1.285
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.75,
+    "height": 1.285
+   }
+  },
+  {
+   "name": "rock_d",
+   "group": "rock",
+   "offset": 30811,
+   "count": 17,
+   "size": [
+    2.101,
+    1.133,
+    1.26
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.799,
+    "height": 1.26
+   }
+  },
+  {
+   "name": "stump_a",
+   "group": "wood",
+   "offset": 30828,
+   "count": 43,
+   "size": [
+    1.425,
+    1.59,
+    0.575
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.509,
+    "height": 0.575
+   }
+  },
+  {
+   "name": "stump_b",
+   "group": "wood",
+   "offset": 30871,
+   "count": 46,
+   "size": [
+    1.523,
+    1.395,
+    0.519
+   ],
+   "collider": {
+    "shape": "cyl",
+    "radius": 0.487,
+    "height": 0.519
+   }
+  }
+ ]
+}

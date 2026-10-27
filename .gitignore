@@ -15,3 +15,6 @@ assets-src/rocketbox/
 
 # Sketchfab ritsar xom fayllari (CC-BY, by__Rx) - qayta ishlangani client/public ga chiqadi
 assets-src/knight/
+
+# Poly Haven xom modellar (tools/fetch-nature.mjs bilan qayta yuklanadi)
+assets-src/nature/

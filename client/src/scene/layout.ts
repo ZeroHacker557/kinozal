@@ -43,6 +43,20 @@ export function loadJson<T>(url: string): Promise<T> {
   return p as Promise<T>;
 }
 
+const binCache = new Map<string, Promise<ArrayBuffer>>();
+
+export function loadBinary(url: string): Promise<ArrayBuffer> {
+  let p = binCache.get(url);
+  if (!p) {
+    p = fetch(url).then((r) => {
+      if (!r.ok) throw new Error(`${url}: ${r.status}`);
+      return r.arrayBuffer();
+    });
+    binCache.set(url, p);
+  }
+  return p;
+}
+
 export function loadLayout(): Promise<HallLayout> {
   return loadJson<HallLayout>('/models/layout.json');
 }

@@ -1,0 +1,64 @@
+{
+ "variants": [
+  {
+   "name": "fir_a",
+   "kind": "fir",
+   "height": 19.0,
+   "trunkRadius": 0.34,
+   "dead": false,
+   "tris": [
+    4870,
+    510
+   ],
+   "impostor": {
+    "width": 12.54,
+    "height": 19.4
+   }
+  },
+  {
+   "name": "fir_b",
+   "kind": "fir",
+   "height": 13.5,
+   "trunkRadius": 0.24,
+   "dead": false,
+   "tris": [
+    2814,
+    318
+   ],
+   "impostor": {
+    "width": 8.91,
+    "height": 13.9
+   }
+  },
+  {
+   "name": "pine_a",
+   "kind": "pine",
+   "height": 22.0,
+   "trunkRadius": 0.32,
+   "dead": false,
+   "tris": [
+    2632,
+    278
+   ],
+   "impostor": {
+    "width": 12.32,
+    "height": 22.4
+   }
+  },
+  {
+   "name": "dead_a",
+   "kind": "fir",
+   "height": 15.0,
+   "trunkRadius": 0.26,
+   "dead": true,
+   "tris": [
+    2946,
+    1072
+   ],
+   "impostor": {
+    "width": 9.9,
+    "height": 15.4
+   }
+  }
+ ]
+}
