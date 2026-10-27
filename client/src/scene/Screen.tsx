@@ -6,7 +6,7 @@ import { lightingState } from './lighting';
 import { useScreen } from '../screen/screenStore';
 
 /** Ekran ulashilmaganda ko'rinadigan kutish tasviri. */
-function createIdleTexture() {
+function createIdleTexture(title: string) {
   const W = 2048, H = 1152;
   const c = document.createElement('canvas');
   c.width = W;
@@ -32,7 +32,7 @@ function createIdleTexture() {
   g.fillStyle = 'rgba(232, 214, 180, 0.95)';
   g.font = '600 150px Inter, "Segoe UI", sans-serif';
   g.letterSpacing = '24px';
-  g.fillText('KINO ZAL', W / 2, H * 0.42);
+  g.fillText(title, W / 2, H * 0.42);
 
   g.letterSpacing = '0px';
   g.fillStyle = 'rgba(200, 210, 235, 0.75)';
@@ -119,8 +119,18 @@ function createScreenMaterial() {
 const SAMPLE_EVERY = 0.1;
 const LIGHT_DAMP = 6;
 
+/** Kino zal ekrani */
 export function Screen() {
   const { screen, layout } = useHall();
+  return <ScreenSurface mesh={screen} aspect={layout.screen.width / layout.screen.height} title="KINO ZAL" />;
+}
+
+/**
+ * Istalgan xaritadagi ekran yuzasi: ulashilgan video (yoki kutish tasviri) shu mesh'ga chiziladi,
+ * tasvirning o'rtacha rangi lightingState.screenAverage'ga yoziladi (ekran nuri uchun).
+ * Mesh UV'lari glTF'dan (V teskari) kelgan bo'lishi kerak.
+ */
+export function ScreenSurface({ mesh: screen, aspect: screenAspect, title }: { mesh: THREE.Mesh; aspect: number; title: string }) {
   const video = useScreen((s) => s.video);
   const mat = useMemo(createScreenMaterial, []);
   const state = useRef({
@@ -130,17 +140,16 @@ export function Screen() {
     coverage: 1,
     sampleIn: 0,
   });
-  const screenAspect = layout.screen.width / layout.screen.height;
 
   // Kutish tasviri va material
   useEffect(() => {
     const s = state.current;
-    s.idle = createIdleTexture();
+    s.idle = createIdleTexture(title);
     screen.material = mat;
     // Shrift yuklangach qayta chizish
     document.fonts?.ready.then(() => {
       if (!s.idle) return;
-      const fresh = createIdleTexture();
+      const fresh = createIdleTexture(title);
       if (mat.uniforms.map.value === s.idle.tex) mat.uniforms.map.value = fresh.tex;
       s.idle.tex.dispose();
       s.idle = fresh;
@@ -150,7 +159,7 @@ export function Screen() {
       s.idle = null;
       mat.dispose();
     };
-  }, [screen, mat]);
+  }, [screen, mat, title]);
 
   // Ulashilgan video
   useEffect(() => {

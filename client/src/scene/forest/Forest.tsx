@@ -1,21 +1,18 @@
 import { use, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { RigidBody, CylinderCollider } from '@react-three/rapier';
 import { loadJson, type SeatInfo, type Vec3 } from '../layout';
 import { MapContext, type MapData } from '../mapContext';
 import { hallUniforms } from '../lighting';
-import { interactables } from '../../interaction/interactables';
-import { requestSit } from '../../net/net';
-import { seatOwner, useRoom } from '../../net/roomStore';
 import { loadTerrain } from './terrainData';
 import { Terrain, TerrainColliders } from './Terrain';
 import { Water } from './Water';
 import { Bridge } from './Bridge';
+import { Camp, ScreenGlow } from './Camp';
 
 /**
- * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy, gulxan maydoni.
- * To'nkalar, gulxan va ekran hozircha vaqtinchalik - keyingi bosqichlarda Blender modellari bilan almashadi.
+ * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy va ko'prik,
+ * gulxan maydoni (forest_camp.py: o'choq, to'nkalar, mato kino ekrani, lager buyumlari).
  */
 
 export interface LogInfo {
@@ -34,80 +31,12 @@ export interface ForestLayout {
   bounds: { min: [number, number]; max: [number, number] };
 }
 
-const LOG_RADIUS = 0.23;
 const NIGHT = '#070a12';
 
-function Logs({ layout }: { layout: ForestLayout }) {
-  const meshes = useRef<THREE.Mesh[]>([]);
-  const mat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#4a3424', roughness: 0.95 }), []);
-
-  useEffect(() => {
-    const seatsOf = new Map<string, SeatInfo[]>();
-    for (const s of layout.seats) seatsOf.set(s.row, [...(seatsOf.get(s.row) ?? []), s]);
-    // To'nkaning qaralgan nuqtasiga eng yaqin bo'sh joy
-    const seatAt = (hit: THREE.Intersection) => {
-      const id = hit.object.userData.logId as string | undefined;
-      const selfId = useRoom.getState().selfId;
-      const free = (seatsOf.get(id ?? '') ?? []).filter((s) => {
-        const owner = seatOwner(s.id);
-        return !owner || owner.id === selfId;
-      });
-      let best: SeatInfo | null = null, bestD = Infinity;
-      for (const s of free) {
-        const d = Math.hypot(s.position[0] - hit.point.x, s.position[2] - hit.point.z);
-        if (d < bestD) (best = s), (bestD = d);
-      }
-      return best;
-    };
-    return interactables.add({
-      id: 'forest-logs',
-      target: meshes.current,
-      maxDistance: 3.2,
-      label: (hit) => (seatAt(hit) ? "O'tirish" : 'Joy band'),
-      use: (hit) => {
-        const seat = seatAt(hit);
-        if (seat) requestSit(seat.id);
-      },
-    });
-  }, [layout]);
-
-  return (
-    <group>
-      {layout.logs.map((l, i) => (
-        <group key={l.id} position={l.position} rotation-y={l.yaw}>
-          <mesh
-            ref={(m) => {
-              if (m) meshes.current[i] = m;
-            }}
-            userData={{ logId: l.id }}
-            material={mat}
-            position={[0, LOG_RADIUS * 0.9, 0]}
-            rotation-z={Math.PI / 2}
-            castShadow
-            receiveShadow
-          >
-            <cylinderGeometry args={[LOG_RADIUS, LOG_RADIUS * 1.05, l.length, 14]} />
-          </mesh>
-          <RigidBody type="fixed" colliders={false}>
-            <CylinderCollider args={[l.length / 2, LOG_RADIUS]} position={[0, LOG_RADIUS * 0.9, 0]} rotation-z={Math.PI / 2} />
-          </RigidBody>
-        </group>
-      ))}
-    </group>
-  );
-}
-
+/** Vaqtinchalik alanga va miltillovchi gulxan nuri (4-bosqichda haqiqiy olov effekti bilan almashadi) */
 function Campfire({ position }: { position: Vec3 }) {
   const light = useRef<THREE.PointLight>(null);
   const flame = useRef<THREE.Mesh>(null);
-  const stones = useMemo(() => {
-    const out: { p: Vec3; s: number; r: number }[] = [];
-    for (let i = 0; i < 11; i++) {
-      const a = (i / 11) * Math.PI * 2;
-      out.push({ p: [Math.cos(a) * 0.75, 0.08, Math.sin(a) * 0.75], s: 0.16 + ((i * 37) % 7) * 0.012, r: i * 1.7 });
-    }
-    return out;
-  }, []);
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
@@ -121,37 +50,11 @@ function Campfire({ position }: { position: Vec3 }) {
 
   return (
     <group position={position}>
-      {stones.map((s, i) => (
-        <mesh key={i} position={s.p} rotation={[s.r, s.r * 0.7, 0]} scale={s.s} castShadow receiveShadow>
-          <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color="#3b3a38" roughness={0.9} />
-        </mesh>
-      ))}
-      <mesh ref={flame} position={[0, 0.45, 0]}>
-        <coneGeometry args={[0.35, 0.9, 12, 1, true]} />
-        <meshBasicMaterial color="#ffb35a" toneMapped={false} transparent opacity={0.85} side={THREE.DoubleSide} />
+      <mesh ref={flame} position={[0, 0.5, 0]}>
+        <coneGeometry args={[0.28, 0.8, 12, 1, true]} />
+        <meshBasicMaterial color="#ffb35a" toneMapped={false} transparent opacity={0.8} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       <pointLight ref={light} position={[0, 0.9, 0]} color="#ff9440" distance={30} decay={2} />
-    </group>
-  );
-}
-
-function ScreenStand({ screen }: { screen: ForestLayout['screen'] }) {
-  const [x, y, z] = screen.center;
-  const hw = screen.width / 2;
-  const top = y + screen.height / 2;
-  return (
-    <group>
-      <mesh position={[x, y, z]}>
-        <planeGeometry args={[screen.width, screen.height]} />
-        <meshStandardMaterial color="#cfcac0" roughness={1} />
-      </mesh>
-      {[-1, 1].map((sx) => (
-        <mesh key={sx} position={[x + sx * (hw + 0.15), (top + 0.4) / 2, z - 0.05]} castShadow>
-          <cylinderGeometry args={[0.09, 0.11, top + 0.4, 10]} />
-          <meshStandardMaterial color="#3a2a1d" roughness={0.9} />
-        </mesh>
-      ))}
     </group>
   );
 }
@@ -211,9 +114,9 @@ export function Forest({ children }: { children?: ReactNode }) {
       <TerrainColliders data={terrain} />
       <Water stream={terrain.meta.stream} />
       <Bridge bridge={terrain.meta.bridge} />
+      <Camp seats={layout.seats} screen={layout.screen} />
       <Campfire position={layout.fire} />
-      <Logs layout={layout} />
-      <ScreenStand screen={layout.screen} />
+      <ScreenGlow center={layout.screen.center} />
       {children}
     </MapContext>
   );

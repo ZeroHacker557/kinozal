@@ -22,7 +22,7 @@ export function forestTextureUrls(id: ForestTexture) {
  */
 export function texturedMaterial(
   loaded: THREE.Texture[],
-  opts: { tile: number; turn?: boolean; color?: THREE.ColorRepresentation; roughness?: number; anisotropy?: number },
+  opts: { tile: number; turn?: boolean; color?: THREE.ColorRepresentation; roughness?: number; anisotropy?: number; side?: THREE.Side },
 ) {
   const [diff, nor, rough] = loaded.map((t, i) => {
     const c = t.clone();
@@ -40,5 +40,6 @@ export function texturedMaterial(
     roughnessMap: rough ?? null,
     roughness: opts.roughness ?? 0.9,
     color: opts.color ?? '#ffffff',
+    side: opts.side ?? THREE.FrontSide,
   });
 }
