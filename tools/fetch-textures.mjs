@@ -22,6 +22,11 @@ const TEXTURES = {
   mossy_rock: [FOREST, 'qoyalar'],
   rough_wood: [FOREST, "eskirgan taxta (ko'prik, to'nkalar)"],
   bark_brown_02: [FOREST, "moxli po'stloq (xodalar, bargli daraxtlar)"],
+  // Qasr
+  castle_wall_slates: [FOREST, 'qasr devorlari va minoralar'],
+  mossy_stone_wall: [FOREST, "devorlarning pastki (moxli) qismi"],
+  roof_slates_02: [FOREST, 'minora tomlari (shifer)'],
+  cobblestone_floor_08: [FOREST, "darvoza oldi yo'lagi"],
 };
 
 // Poly Haven fayl kalitlari -> bizdagi nom

@@ -71,10 +71,32 @@ const flameFragment = /* glsl */ `
     gl_FragColor = vec4( col * a * ( 2.2 + uHot ) * uFire, 1.0 );
   }`;
 
+const flameGeometry = new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0);
+
+/** Bitta alanga tilchasi (gulxan va mash'alalar uchun): kameraga qaragan, shamolda egiladi */
+export function createFlameMesh(scale: [number, number], seed: number, hot: number) {
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: fireUniforms.uTime,
+      uWind: fireUniforms.uWind,
+      uFire: fireUniforms.uFire,
+      uScale: { value: new THREE.Vector2(...scale) },
+      uSeed: { value: seed },
+      uHot: { value: hot },
+    },
+    vertexShader: flameVertex,
+    fragmentShader: flameFragment,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const mesh = new THREE.Mesh(flameGeometry, mat);
+  mesh.frustumCulled = false;
+  return mesh;
+}
+
 function Flames() {
   const items = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(1, 1);
-    geo.translate(0, 0.5, 0);
     // Asosiy alanga + atrofda kichikroq tilchalar
     const defs: { p: Vec3; s: [number, number]; seed: number; hot: number }[] = [
       { p: [0, 0.08, 0], s: [1.05, 1.65], seed: 0.1, hot: 1 },
@@ -84,24 +106,8 @@ function Flames() {
       { p: [-0.05, 0.05, 0.17], s: [0.48, 0.85], seed: 0.55, hot: 0.2 },
     ];
     return defs.map((d, i) => {
-      const mat = new THREE.ShaderMaterial({
-        uniforms: {
-          uTime: fireUniforms.uTime,
-          uWind: fireUniforms.uWind,
-          uFire: fireUniforms.uFire,
-          uScale: { value: new THREE.Vector2(...d.s) },
-          uSeed: { value: d.seed },
-          uHot: { value: d.hot },
-        },
-        vertexShader: flameVertex,
-        fragmentShader: flameFragment,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
+      const mesh = createFlameMesh(d.s, d.seed, d.hot);
       mesh.position.set(...d.p);
-      mesh.frustumCulled = false;
       mesh.renderOrder = 3 + i;
       return mesh;
     });

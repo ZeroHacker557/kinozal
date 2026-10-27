@@ -11,6 +11,7 @@ import { Camp, ScreenGlow } from './Camp';
 import { Fire } from './Fire';
 import { Nature } from './Nature';
 import { Sky, MOON_DIR } from './Sky';
+import { Castle } from './Castle';
 
 /**
  * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy va ko'prik,
@@ -88,6 +89,7 @@ export function Forest({ children }: { children?: ReactNode }) {
       <Water stream={terrain.meta.stream} />
       <Bridge bridge={terrain.meta.bridge} />
       <Nature />
+      <Castle />
       <Camp seats={layout.seats} screen={layout.screen} />
       <Fire position={layout.fire} />
       <ScreenGlow center={layout.screen.center} />

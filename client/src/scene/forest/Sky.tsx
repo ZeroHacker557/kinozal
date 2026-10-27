@@ -61,8 +61,9 @@ const haloFragment = /* glsl */ `
   varying vec2 vUv;
   void main() {
     float r = length( vUv - 0.5 ) * 2.0;
-    float a = exp( -r * 5.5 ) * 0.9 + exp( -r * 1.8 ) * 0.12;
-    a *= smoothstep( 1.0, 0.7, r );
+    // Havodagi tarqalish: oy yonida kichik, xira halqa (katta yorug' disk ignalar orasidan "qor"dek ko'rinadi)
+    float a = exp( -r * 8.0 ) * 0.28 + exp( -r * 3.0 ) * 0.035;
+    a *= smoothstep( 1.0, 0.6, r );
     gl_FragColor = vec4( uColor * a, 1.0 );
   }`;
 
@@ -105,7 +106,7 @@ export function Sky() {
     const toObserver = MOON_DIR.clone().negate();
     const sun = toObserver.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), PHASE).normalize();
     const moonMat = new THREE.ShaderMaterial({
-      uniforms: { uMap: { value: map }, uNormal: { value: nrm }, uSun: { value: sun }, uBright: { value: 1.35 } },
+      uniforms: { uMap: { value: map }, uNormal: { value: nrm }, uSun: { value: sun }, uBright: { value: 1.0 } },
       vertexShader: moonVertex,
       fragmentShader: moonFragment,
       fog: false,
@@ -120,7 +121,7 @@ export function Sky() {
 
     // Nur halqasi (havodagi tarqalish)
     const halo = new THREE.Mesh(
-      new THREE.PlaneGeometry(MOON_R * 14, MOON_R * 14),
+      new THREE.PlaneGeometry(MOON_R * 5, MOON_R * 5),
       new THREE.ShaderMaterial({
         uniforms: { uColor: { value: new THREE.Color(0.55, 0.62, 0.8) } },
         vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }',
