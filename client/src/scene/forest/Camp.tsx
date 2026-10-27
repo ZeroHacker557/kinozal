@@ -10,6 +10,7 @@ import { lightingState } from '../lighting';
 import { interactables } from '../../interaction/interactables';
 import { requestSit } from '../../net/net';
 import { seatOwner, useRoom } from '../../net/roomStore';
+import { applyEmberGlow } from './Fire';
 
 const URL = '/maps/forest/models/camp.glb';
 const HESSIAN = ['/textures/hessian_380/diff.jpg', '/textures/hessian_380/nor.jpg'];
@@ -38,6 +39,9 @@ export function Camp({ seats, screen }: { seats: SeatInfo[]; screen: { width: nu
   const materials = useMemo<Record<string, THREE.Material>>(() => {
     const plain = (color: string, roughness = 0.95, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
     const glow = new THREE.MeshStandardMaterial({ color: '#2a1a0c', emissive: '#ffb060', emissiveIntensity: 3.2 });
+    // Ko'mir va o'tin uchlari gulxan ichida qizarib turadi
+    const charcoal = plain('#0e0d0c', 0.75);
+    applyEmberGlow(charcoal);
     return {
       Bark: texturedMaterial(bark, { tile: 1.0, turn: true, roughness: 0.95 }),
       Firewood: texturedMaterial(bark, { tile: 0.8, turn: true, color: '#8a8580', roughness: 0.95 }),
@@ -50,7 +54,7 @@ export function Camp({ seats, screen }: { seats: SeatInfo[]; screen: { width: nu
       Canvas: texturedMaterial(cloth, { tile: 0.6, color: '#f2ead8', roughness: 1, side: THREE.DoubleSide }),
       TentCanvas: texturedMaterial(cloth, { tile: 0.6, color: '#8f7f66', roughness: 1, side: THREE.DoubleSide }),
       Banner: texturedMaterial(cloth, { tile: 0.6, color: '#7e1616', roughness: 1, side: THREE.DoubleSide }),
-      Charcoal: plain('#0e0d0c', 0.75),
+      Charcoal: charcoal,
       Ash: plain('#4f4b47', 1),
       Rope: plain('#6e5a3c', 1),
       Iron: plain('#2b2b2e', 0.45, 0.85),
@@ -74,7 +78,11 @@ export function Camp({ seats, screen }: { seats: SeatInfo[]; screen: { width: nu
       const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       const mapped = list.map((m) => materials[m.name] ?? m);
       mesh.material = Array.isArray(mesh.material) ? mapped : mapped[0];
-      mesh.castShadow = mesh.receiveShadow = true;
+      // O'choq gulxan nurini to'smasin (nur manbai alanga ichida)
+      let firePit = false;
+      for (let p: THREE.Object3D | null = mesh; p; p = p.parent) if (p.name === 'FirePit') firePit = true;
+      mesh.castShadow = !firePit;
+      mesh.receiveShadow = true;
       mesh.matrixAutoUpdate = false;
       mesh.updateMatrix();
     });

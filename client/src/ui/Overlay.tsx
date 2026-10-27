@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useProgress } from '@react-three/drei';
 import { AVATARS, MAPS, isValidRoomCode, MAX_PLAYERS } from '@shared/protocol.ts';
 import { useActiveMap } from '../scene/mapContext';
+import { useAmbient } from '../audio/ambient';
 import { useGame, type Quality } from '../state/store';
 import { input } from '../player/input';
 import { POSE_MENU } from '../player/poses';
@@ -375,6 +376,23 @@ function VoicePanel() {
   );
 }
 
+/** Atrof ovozlari (gulxan, tabiat) - faqat o'rmon xaritasida. */
+function AmbientPanel() {
+  const map = useActiveMap();
+  const volume = useAmbient((s) => s.volume);
+  const setVolume = useAmbient((s) => s.setVolume);
+  if (map !== 'forest') return null;
+  return (
+    <div className="room-panel voice-panel">
+      <label className="voice-row">
+        <span>Atrof ovozlari</span>
+        <VolumeSlider value={volume} onChange={setVolume} label="Atrof ovozlari (gulxan, tabiat)" />
+        <span className="voice-pct">{Math.round(volume * 100)}%</span>
+      </label>
+    </div>
+  );
+}
+
 /** Pauza menyusidagi ekran ulashish bo'limi. */
 function ScreenPanel() {
   const room = useRoom((s) => s.room);
@@ -642,6 +660,7 @@ export function Overlay() {
             <RoomPanel />
             <ScreenPanel />
             <VoicePanel />
+            <AmbientPanel />
             <QualityPicker />
             <Controls />
             <button

@@ -490,29 +490,15 @@ function setParam(p: AudioParam, v: number, t: number) {
 }
 
 /**
- * Eshituvchi (kamera) va ovoz manbalarini (avatar boshi) yangilash, kim gapirayotganini aniqlash.
+ * Ovoz manbalarini (avatar boshi) yangilash, kim gapirayotganini aniqlash.
  * head(id) - avatar boshi joylashuvi (ko'rinmasa undefined).
  */
-export function voiceFrame(pos: Vec, forward: Vec, up: Vec, head: (id: string) => Vec | undefined) {
+export function voiceFrame(head: (id: string) => Vec | undefined) {
   const ctx = master?.context as AudioContext | undefined;
   const now = performance.now();
   if (ctx && peers.size) {
     const t = ctx.currentTime;
-    const l = ctx.listener;
-    if (l.positionX) {
-      setParam(l.positionX, pos.x, t);
-      setParam(l.positionY, pos.y, t);
-      setParam(l.positionZ, pos.z, t);
-      setParam(l.forwardX, forward.x, t);
-      setParam(l.forwardY, forward.y, t);
-      setParam(l.forwardZ, forward.z, t);
-      setParam(l.upX, up.x, t);
-      setParam(l.upY, up.y, t);
-      setParam(l.upZ, up.z, t);
-    } else {
-      l.setPosition(pos.x, pos.y, pos.z);
-      l.setOrientation(forward.x, forward.y, forward.z, up.x, up.y, up.z);
-    }
+    // Eshituvchi (listener) audio/context.ts updateListener'da yangilanadi
     for (const [id, p] of peers) {
       const h = head(id);
       if (h) {

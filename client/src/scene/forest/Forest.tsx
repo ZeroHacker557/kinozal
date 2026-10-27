@@ -1,14 +1,14 @@
-import { use, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { use, useEffect, useMemo, type ReactNode } from 'react';
 import * as THREE from 'three';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import { loadJson, type SeatInfo, type Vec3 } from '../layout';
 import { MapContext, type MapData } from '../mapContext';
-import { hallUniforms } from '../lighting';
 import { loadTerrain } from './terrainData';
 import { Terrain, TerrainColliders } from './Terrain';
 import { Water } from './Water';
 import { Bridge } from './Bridge';
 import { Camp, ScreenGlow } from './Camp';
+import { Fire } from './Fire';
 
 /**
  * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy va ko'prik,
@@ -32,32 +32,6 @@ export interface ForestLayout {
 }
 
 const NIGHT = '#070a12';
-
-/** Vaqtinchalik alanga va miltillovchi gulxan nuri (4-bosqichda haqiqiy olov effekti bilan almashadi) */
-function Campfire({ position }: { position: Vec3 }) {
-  const light = useRef<THREE.PointLight>(null);
-  const flame = useRef<THREE.Mesh>(null);
-
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    // Bir necha sinusdan yig'ilgan "tirik" miltillash
-    const f = 0.82 + 0.1 * Math.sin(t * 7.3) + 0.06 * Math.sin(t * 13.1 + 1.3) + 0.04 * Math.sin(t * 23.7 + 0.4);
-    hallUniforms.uHouse.value = f;
-    hallUniforms.uScreenColor.value.setRGB(0, 0, 0);
-    if (light.current) light.current.intensity = 14 * f;
-    if (flame.current) flame.current.scale.set(1, 0.85 + 0.25 * f, 1);
-  });
-
-  return (
-    <group position={position}>
-      <mesh ref={flame} position={[0, 0.5, 0]}>
-        <coneGeometry args={[0.28, 0.8, 12, 1, true]} />
-        <meshBasicMaterial color="#ffb35a" toneMapped={false} transparent opacity={0.8} side={THREE.DoubleSide} depthWrite={false} />
-      </mesh>
-      <pointLight ref={light} position={[0, 0.9, 0]} color="#ff9440" distance={30} decay={2} />
-    </group>
-  );
-}
 
 /** Kamera ko'rish masofasi va tuman - ochiq xarita uchun */
 function SkyAndFog() {
@@ -115,7 +89,7 @@ export function Forest({ children }: { children?: ReactNode }) {
       <Water stream={terrain.meta.stream} />
       <Bridge bridge={terrain.meta.bridge} />
       <Camp seats={layout.seats} screen={layout.screen} />
-      <Campfire position={layout.fire} />
+      <Fire position={layout.fire} />
       <ScreenGlow center={layout.screen.center} />
       {children}
     </MapContext>
