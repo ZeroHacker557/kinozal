@@ -382,12 +382,44 @@ def build_tree(name, kind, H, R0, seed, lod, mats, dead=False):
                 v = me.vertices[me.loops[li].vertex_index].co
                 if p.material_index == si:
                     n = (Vector((v.x, v.y, v.z)) - crown_c)
-                    n.z = n.z * 0.5 + 1.2  # yuqoriga og'ish
+                    n.z = n.z * 0.6 + 0.3  # biroz yuqoriga og'ish (ortiqchasi tojni oqartiradi)
                     normals[li] = n.normalized()
                 else:
                     normals[li] = p.normal.copy() if not p.use_smooth else me.vertices[me.loops[li].vertex_index].normal.copy()
         me.normals_split_custom_set([tuple(n) for n in normals])
+    bake_ao(me, H, spray_index=(mb.mats.index(spray) if spray is not None and spray in mb.mats else -1))
     return ob
+
+
+def bake_ao(me, H, spray_index):
+    """Tojning ichi qorong'i, shox uchlari va tepasi yorug' (vertex rangi). Shox tanalari toj ichida soyada."""
+    co = np.array([v.co[:] for v in me.vertices])
+    r = np.hypot(co[:, 0], co[:, 1])
+    z = co[:, 2]
+    # Har 1 m balandlikda tojning eng chekka radiusi
+    bins = np.clip(z.astype(int), 0, int(H) + 2)
+    rmax = np.zeros(int(H) + 3)
+    np.maximum.at(rmax, bins, r)
+    for i in range(1, len(rmax) - 1):  # silliqlash
+        rmax[i] = max(rmax[i], 0.5 * (rmax[i - 1] + rmax[i + 1]))
+    rel = np.clip(r / np.maximum(rmax[bins], 0.3), 0, 1)
+    height = np.clip(z / H, 0, 1)
+    attr = me.color_attributes.new('Col', 'BYTE_COLOR', 'CORNER')
+    cols = np.ones((len(me.loops), 4), np.float32)
+    for p in me.polygons:
+        for li in p.loop_indices:
+            vi = me.loops[li].vertex_index
+            t = rel[vi]
+            if p.material_index == spray_index:
+                ao = 0.3 + 0.7 * (t * t * (3 - 2 * t))
+                ao *= 0.72 + 0.28 * height[vi]
+            else:
+                # tana/shox: toj ostida ochiq, ichida soyada
+                inside = rmax[bins[vi]] > 0.6
+                ao = (0.38 + 0.35 * t) if inside else 0.85
+            cols[li, :3] = ao
+    attr.data.foreach_set('color', cols.ravel())
+    me.color_attributes.active_color = attr
 
 
 def materials():
@@ -435,10 +467,18 @@ def to_emission_for_render(mats):
         col_link = bsdf.inputs['Base Color'].links
         out = nt.nodes['Material Output']
         em = nt.nodes.new('ShaderNodeEmission')
+        ao = nt.nodes.new('ShaderNodeVertexColor')
+        ao.layer_name = 'Col'
+        mul = nt.nodes.new('ShaderNodeMix')
+        mul.data_type = 'RGBA'
+        mul.blend_type = 'MULTIPLY'
+        mul.inputs['Factor'].default_value = 1.0
+        nt.links.new(ao.outputs['Color'], mul.inputs[7])
         if col_link:
-            nt.links.new(col_link[0].from_socket, em.inputs['Color'])
+            nt.links.new(col_link[0].from_socket, mul.inputs[6])
         else:
-            em.inputs['Color'].default_value = bsdf.inputs['Base Color'].default_value
+            mul.inputs[6].default_value = bsdf.inputs['Base Color'].default_value
+        nt.links.new(mul.outputs[2], em.inputs['Color'])
         if 'spray' in key:
             tex = col_link[0].from_node
             tr = nt.nodes.new('ShaderNodeBsdfTransparent')
@@ -536,7 +576,7 @@ def main():
         export.append(impostor_quads(f'{name}_2', v['height'], v['width'], i, n, imp_mat, frame))
 
     os.makedirs(os.path.join(OUT, 'models'), exist_ok=True)
-    export_glb(export, os.path.join(OUT, 'models', 'trees.glb'))
+    export_glb(export, os.path.join(OUT, 'models', 'trees.glb'), vertex_color=True)
     # Po'stloq teksturalari client uchun
     import shutil
     for src, dst in (('fir_tree_01', 'fir_bark'), ('pine_tree_01', 'pine_bark')):

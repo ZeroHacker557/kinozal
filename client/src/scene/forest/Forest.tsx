@@ -10,6 +10,7 @@ import { Bridge } from './Bridge';
 import { Camp, ScreenGlow } from './Camp';
 import { Fire } from './Fire';
 import { Nature } from './Nature';
+import { Sky, MOON_DIR } from './Sky';
 
 /**
  * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy va ko'prik,
@@ -79,12 +80,9 @@ export function Forest({ children }: { children?: ReactNode }) {
       <color attach="background" args={[NIGHT]} />
       <SkyAndFog />
       <hemisphereLight args={['#2a3a5c', '#0b0907', 0.35]} />
-      <directionalLight position={[-120, 220, -260]} color="#a8bcff" intensity={0.55} />
-      {/* Oy (vaqtinchalik) */}
-      <mesh position={[-300, 520, -900]}>
-        <sphereGeometry args={[28, 32, 16]} />
-        <meshBasicMaterial color="#e8ecf5" toneMapped={false} fog={false} />
-      </mesh>
+      {/* Oy nuri osmondagi Oy tomonidan tushadi */}
+      <directionalLight position={MOON_DIR.clone().multiplyScalar(300).toArray()} color="#a8bcff" intensity={0.55} />
+      <Sky />
       <Terrain data={terrain} />
       <TerrainColliders data={terrain} />
       <Water stream={terrain.meta.stream} />

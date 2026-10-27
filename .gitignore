@@ -18,3 +18,6 @@ assets-src/knight/
 
 # Poly Haven xom modellar (tools/fetch-nature.mjs bilan qayta yuklanadi)
 assets-src/nature/
+
+# NASA CGI Moon Kit xom fayllari (tools/moon-textures.py)
+assets-src/moon/

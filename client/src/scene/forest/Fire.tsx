@@ -182,11 +182,11 @@ function Embers({ count }: { count: number }) {
     points.geometry.dispose();
     (points.material as THREE.Material).dispose();
   }, [points]);
-  useEffect(() => {
-    // Nuqta o'lchami piksellarda: dunyo o'lchami * (ekran balandligi / 2) / tan(fov / 2) / masofa
+  useFrame(() => {
+    // Nuqta o'lchami piksellarda: dunyo o'lchami * (ekran balandligi / 2) / tan(fov / 2) / masofa (zoom'da ham to'g'ri)
     (points.material as THREE.ShaderMaterial).uniforms.uPx.value =
       (size.height * gl.getPixelRatio()) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
-  }, [points, size, camera.fov, gl]);
+  });
   return <primitive object={points} />;
 }
 

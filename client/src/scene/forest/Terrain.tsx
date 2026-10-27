@@ -5,6 +5,7 @@ import { CuboidCollider, HeightfieldCollider, RigidBody } from '@react-three/rap
 import { useGame } from '../../state/store';
 import { CHUNK_CELLS, LOD_STEPS, type TerrainData } from './terrainData';
 import { createTerrainMaterial } from './terrainMaterial';
+import { view } from '../view';
 
 const BASE = '/maps/forest';
 
@@ -75,7 +76,7 @@ export function Terrain({ data }: { data: TerrainData }) {
         Math.max(Math.abs(camera.position.x - c.center.x) - half, 0),
         Math.max(Math.abs(camera.position.z - c.center.y) - half, 0),
       );
-      const want = lodFor(tmp.length());
+      const want = lodFor(tmp.length() / view.zoom);
       if (want === c.lod) continue;
       if (!c.geos[want]) {
         // Bir kadrda ko'pi bilan 2 ta yangi geometriya - qotib qolmasin

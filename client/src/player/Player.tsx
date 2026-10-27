@@ -10,6 +10,7 @@ import { requestPose, requestStand, sendState } from '../net/net';
 import { toggleMic } from '../voice/voice';
 import { POSE_MENU, wheelIndex } from './poses';
 import type { Gait } from '@shared/protocol.ts';
+import { BASE_FOV, ZOOM_FOV, view } from '../scene/view';
 
 const CAPSULE_HALF = 0.5;
 const CAPSULE_RADIUS = 0.22;
@@ -170,6 +171,18 @@ export function Player() {
       if (consumePress('Digit0')) requestPose(null);
     }
 
+    // ---------------------------------------------------------------- zoom (C bosib turilganda)
+    const cam = camera as THREE.PerspectiveCamera;
+    const wantFov = playing && k.has('KeyC') ? ZOOM_FOV : BASE_FOV;
+    if (Math.abs(cam.fov - wantFov) > 0.01) {
+      cam.fov = THREE.MathUtils.damp(cam.fov, wantFov, 9, dt);
+      if (Math.abs(cam.fov - wantFov) < 0.02) cam.fov = wantFov;
+      cam.updateProjectionMatrix();
+    }
+    view.zoom = BASE_FOV / cam.fov;
+    // Yaqinlashtirilganda sichqoncha sezgirligi ham kamayadi (nishon titramaydi)
+    const sens = MOUSE_SENS / view.zoom;
+
     // ---------------------------------------------------------------- qarash
     const wheelOpen = useGame.getState().wheelOpen;
     if (playing && wheelOpen) {
@@ -177,8 +190,8 @@ export function Player() {
       s.wheel.y = THREE.MathUtils.clamp(s.wheel.y + input.mouseDY, -160, 160);
       game.setWheelSel(wheelIndex(s.wheel.x, s.wheel.y));
     } else if (playing) {
-      s.yaw -= input.mouseDX * MOUSE_SENS;
-      s.pitch = THREE.MathUtils.clamp(s.pitch - input.mouseDY * MOUSE_SENS, -1.45, 1.45);
+      s.yaw -= input.mouseDX * sens;
+      s.pitch = THREE.MathUtils.clamp(s.pitch - input.mouseDY * sens, -1.45, 1.45);
     }
     input.mouseDX = input.mouseDY = 0;
 

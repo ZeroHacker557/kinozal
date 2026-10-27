@@ -57,6 +57,7 @@ function Controls() {
       <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> yurish · <kbd>Shift</kbd> tez</li>
       <li><kbd>E</kbd> o'rindiqqa o'tirish / turish, chiroq tugmasi</li>
       <li><kbd>F</kbd> qo'l fonari · <kbd>M</kbd> mikrofon · <kbd>V</kbd> to'liq ekran</li>
+      <li><kbd>C</kbd> bosib turing — yaqinlashtirish (zoom)</li>
       <li><kbd>Q</kbd> bosib turing — harakatlar (yoki <kbd>1</kbd>–<kbd>9</kbd>)</li>
       <li><kbd>Esc</kbd> menyu</li>
     </ul>

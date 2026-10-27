@@ -6,6 +6,7 @@ import { useRapier } from '@react-three/rapier';
 import { useGame } from '../../state/store';
 import { loadBinary, loadJson } from '../layout';
 import { fireUniforms } from './Fire';
+import { view } from '../view';
 
 /**
  * O'rmon tabiati (Blender: forest_trees.py, forest_scatter.py): ~30 ming nusxa.
@@ -154,20 +155,21 @@ export function Nature() {
       t.repeat.set(1 / 1.2, 1 / 1.2);
     }
     for (const t of [firSpray, pineSpray, imp, grassTex]) t.anisotropy = 4;
+    // vertexColors: Blender'da pishirilgan toj ichi soyasi (AO)
     const foliage = (map: THREE.Texture, color: string) =>
-      new THREE.MeshStandardMaterial({ map, color, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.92 });
+      new THREE.MeshStandardMaterial({ map, color, alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.92, vertexColors: true });
     // Uzoq daraja (LOD1, impostor): arzonroq Lambert yoritish - ko'p piksel, kam farq
     const far = (map: THREE.Texture, color: string) =>
-      new THREE.MeshLambertMaterial({ map, color, alphaTest: 0.45, side: THREE.DoubleSide });
+      new THREE.MeshLambertMaterial({ map, color, alphaTest: 0.45, side: THREE.DoubleSide, vertexColors: true });
     const m: Record<string, THREE.Material> = {
-      FirSpray: foliage(firSpray, '#b7c2ae'),
-      PineSpray: foliage(pineSpray, '#b9bfa6'),
-      FirSprayFar: far(firSpray, '#b7c2ae'),
-      PineSprayFar: far(pineSpray, '#b9bfa6'),
-      FirBark: new THREE.MeshStandardMaterial({ map: firBark, normalMap: firBarkN, roughness: 0.95 }),
-      PineBark: new THREE.MeshStandardMaterial({ map: pineBark, normalMap: pineBarkN, roughness: 0.95 }),
+      FirSpray: foliage(firSpray, '#9eae8e'),
+      PineSpray: foliage(pineSpray, '#a3ab8c'),
+      FirSprayFar: far(firSpray, '#9eae8e'),
+      PineSprayFar: far(pineSpray, '#a3ab8c'),
+      FirBark: new THREE.MeshStandardMaterial({ map: firBark, normalMap: firBarkN, roughness: 0.95, color: '#a59c92', vertexColors: true }),
+      PineBark: new THREE.MeshStandardMaterial({ map: pineBark, normalMap: pineBarkN, roughness: 0.95, color: '#a89a8a', vertexColors: true }),
       // Impostor normali yuqoriga qaragani uchun to'liq yoritiladi - yaqin daraxtlar bilan tenglash uchun to'qroq
-      Impostor: far(imp, '#5d6658'),
+      Impostor: new THREE.MeshLambertMaterial({ map: imp, color: '#5d6658', alphaTest: 0.45, side: THREE.DoubleSide }),
       Grass: new THREE.MeshStandardMaterial({ map: grassTex, color: '#a9b08f', alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.95 }),
     };
     applyWind(m.FirSpray, 0.0007, true);
@@ -319,6 +321,8 @@ export function Nature() {
     tmp.pv.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     tmp.frustum.setFromProjectionMatrix(tmp.pv);
     const cx = camera.position.x, cz = camera.position.z;
+    // Zoom (C) qilinganda uzoqdagilar yaqin daraja bilan chiziladi - sifat yo'qolmaydi
+    const zi = 1 / view.zoom;
     for (let j = 0; j < CELLS; j++) {
       for (let i = 0; i < CELLS; i++) {
         const x0 = -HALF + i * CELL, z0 = -HALF + j * CELL;
@@ -335,13 +339,13 @@ export function Nature() {
       for (const l of v.lods) l.n = 0;
       const stride = 5;
       for (let k = 0; k < v.cells.length; k++) {
-        if (!tmp.visible[k] || tmp.cellD[k] > maxR) continue;
+        if (!tmp.visible[k] || tmp.cellD[k] * zi > maxR) continue;
         const list = v.cells[k];
         for (let t = 0; t < list.length; t++) {
           const i = list[t];
           const o = i * stride;
           const dx = v.data[o] - cx, dz = v.data[o + 2] - cz;
-          const d = Math.sqrt(dx * dx + dz * dz);
+          const d = Math.sqrt(dx * dx + dz * dz) * zi;
           let li = 0;
           while (li < v.lods.length && d > v.lods[li].range) li++;
           if (li >= v.lods.length) continue;
