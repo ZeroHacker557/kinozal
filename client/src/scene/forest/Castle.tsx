@@ -61,6 +61,7 @@ export function Castle() {
       const mapped = list.map((m) => materials[m.name] ?? m);
       mesh.material = Array.isArray(mesh.material) ? mapped : mapped[0];
       mesh.receiveShadow = true;
+      mesh.castShadow = true;
       mesh.matrixAutoUpdate = false;
       mesh.updateMatrix();
     });

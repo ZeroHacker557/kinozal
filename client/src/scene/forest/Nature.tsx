@@ -170,7 +170,7 @@ export function Nature() {
       PineBark: new THREE.MeshStandardMaterial({ map: pineBark, normalMap: pineBarkN, roughness: 0.95, color: '#a89a8a', vertexColors: true }),
       // Impostor normali yuqoriga qaragani uchun to'liq yoritiladi - yaqin daraxtlar bilan tenglash uchun to'qroq
       Impostor: new THREE.MeshLambertMaterial({ map: imp, color: '#5d6658', alphaTest: 0.45, side: THREE.DoubleSide }),
-      Grass: new THREE.MeshStandardMaterial({ map: grassTex, color: '#a9b08f', alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.95 }),
+      Grass: new THREE.MeshStandardMaterial({ map: grassTex, color: '#cfd6ad', alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.95 }),
     };
     applyWind(m.FirSpray, 0.0007, true);
     applyWind(m.PineSpray, 0.0006, true);
@@ -254,8 +254,11 @@ export function Nature() {
           im.instanceMatrix = attr;
           im.count = 0;
           im.frustumCulled = false;
-          im.castShadow = false;
-          im.receiveShadow = info.group !== 'tree';
+          // Oy soyasi: daraxtlar (yaqin va o'rta daraja), qoya va xodalar soya tashlaydi; impostor va mayda o'simlik yo'q
+          // (o'rta daraja faqat yuqori sifatda - soya qutisidan tashqaridagilari ham chiziladi, qimmat)
+          im.castShadow =
+            (info.group === 'tree' && (li === 0 || (li === 1 && quality === 'high'))) || info.group === 'rock' || info.group === 'wood';
+          im.receiveShadow = info.group !== 'tree' || li === 0;
           return im;
         });
         return { meshes, attr, range: rs[li], n: 0 };

@@ -56,7 +56,8 @@ export default function App() {
       <GraphicsBoundary>
         <Canvas
           frameloop={fullscreen ? 'never' : 'always'}
-          shadows={quality === 'low' ? false : 'soft'}
+          // Yumshoq (PCFSoft) soya qimmat: faqat yuqori sifatda; o'rtada oddiy PCF
+          shadows={quality === 'low' ? false : quality === 'high' ? 'soft' : true}
           dpr={dpr}
           gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
           camera={{ fov: 72, near: 0.05, far: 80 }}

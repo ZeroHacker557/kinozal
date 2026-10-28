@@ -10,8 +10,9 @@ import { Bridge } from './Bridge';
 import { Camp, ScreenGlow } from './Camp';
 import { Fire } from './Fire';
 import { Nature } from './Nature';
-import { Sky, MOON_DIR } from './Sky';
+import { Sky } from './Sky';
 import { Castle } from './Castle';
+import { FOG_DENSITY, HORIZON, MoonLight, Mist, NatureAudio, SkyDome } from './Atmosphere';
 
 /**
  * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy va ko'prik,
@@ -34,8 +35,6 @@ export interface ForestLayout {
   bounds: { min: [number, number]; max: [number, number] };
 }
 
-const NIGHT = '#070a12';
-
 /** Kamera ko'rish masofasi va tuman - ochiq xarita uchun */
 function SkyAndFog() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
@@ -45,7 +44,8 @@ function SkyAndFog() {
     camera.near = 0.08;
     camera.far = 2500;
     camera.updateProjectionMatrix();
-    scene.fog = new THREE.FogExp2(NIGHT, 0.0045);
+    // Tuman rangi = ufq rangi: uzoqdagi relyef osmonga silliq qo'shiladi
+    scene.fog = new THREE.FogExp2(HORIZON.clone(), FOG_DENSITY);
     return () => {
       camera.near = prev.near;
       camera.far = prev.far;
@@ -78,12 +78,15 @@ export function Forest({ children }: { children?: ReactNode }) {
 
   return (
     <MapContext value={map}>
-      <color attach="background" args={[NIGHT]} />
+      <color attach="background" args={[HORIZON]} />
       <SkyAndFog />
-      <hemisphereLight args={['#2a3a5c', '#0b0907', 0.35]} />
-      {/* Oy nuri osmondagi Oy tomonidan tushadi */}
-      <directionalLight position={MOON_DIR.clone().multiplyScalar(300).toArray()} color="#a8bcff" intensity={0.55} />
+      {/* Tungi osmon yorug'ligi (tepadan sovuq ko'k, pastdan deyarli qora) va oy nuri (soyali) */}
+      <hemisphereLight args={['#22324f', '#0b0a09', 0.6]} />
+      <MoonLight />
+      <SkyDome />
       <Sky />
+      <Mist terrain={terrain} />
+      <NatureAudio terrain={terrain} />
       <Terrain data={terrain} />
       <TerrainColliders data={terrain} />
       <Water stream={terrain.meta.stream} />

@@ -183,6 +183,8 @@ export class AvatarRig {
           const mat = (m.material as THREE.MeshStandardMaterial).clone();
           applyProbeLighting(mat, this.probe);
           m.material = mat;
+          // Oy, gulxan va fonar nurida odamning soyasi
+          m.castShadow = true;
         }
         if ((o as THREE.Bone).isBone) {
           if (o.name === 'Bip01_Head') this.head = o as THREE.Bone;

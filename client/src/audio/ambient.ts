@@ -35,7 +35,7 @@ export const useAmbient = create<AmbientState>((set) => ({
 
 let bus: GainNode | null = null;
 
-function ambientBus(ctx: AudioContext) {
+export function ambientBus(ctx: AudioContext) {
   if (!bus) {
     bus = ctx.createGain();
     bus.gain.value = useAmbient.getState().volume;
@@ -46,7 +46,7 @@ function ambientBus(ctx: AudioContext) {
 }
 
 /** Takrorlanadigan tasodifiy sonlar (har safar bir xil "gulxan") */
-function rng(seed: number) {
+export function rng(seed: number) {
   return () => {
     seed |= 0;
     seed = (seed + 0x6d2b79f5) | 0;

@@ -343,7 +343,8 @@ function FireLight() {
     }
   }, [quality]);
 
-  useFrame(({ clock }) => {
+  const worldPos = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ clock, camera }) => {
     const t = clock.elapsedTime;
     // Bir necha chastotadagi shovqin: sekin "nafas" + tez titrash
     const f = 0.78 + 0.16 * noise1(t * 1.3) + 0.1 * noise1(t * 5.1 + 10) + 0.06 * noise1(t * 13.7 + 20);
@@ -353,6 +354,10 @@ function FireLight() {
     const l = light.current;
     if (!l) return;
     l.intensity = 17 * f;
+    // Kub soya xaritasi har kadr 6 marta chiziladi - faqat gulxan yaqinida yangilanadi
+    // (xarita hech bo'lmasa bir marta yaratilishi shart: aks holda sampler bo'sh qoladi va sahna qora bo'ladi)
+    l.getWorldPosition(worldPos);
+    l.shadow.autoUpdate = !l.shadow.map || camera.position.distanceTo(worldPos) < 45;
     // Alanga tilchalari bilan nur manbai ham biroz siljiydi - soyalar "tirik"
     l.position.set((noise1(t * 2.3) - 0.5) * 0.08, 1.05 + (noise1(t * 3.1 + 5) - 0.5) * 0.1, (noise1(t * 2.7 + 9) - 0.5) * 0.08);
     l.color.setRGB(1, 0.5 + 0.06 * f, 0.2 + 0.04 * f);
