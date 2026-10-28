@@ -287,3 +287,4 @@ button { font-family: inherit; cursor: pointer; }
 }
 .gfx-failed strong { font-size: 17px; }
 .gfx-failed span { max-width: 460px; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+.gfx-failed button { pointer-events: auto; }

@@ -3,6 +3,12 @@
 Brauzerdagi 3D kino zal: xona egasi ekranini katta ekranga ulashadi, do'stlar zalda yurib,
 o'rindiq tanlab o'tirishadi va mikrofonda gaplashib birga tomosha qilishadi.
 
+Ikki xarita (xona yaratishda tanlanadi):
+- **Kino zal** - detallashgan kinoteatr, kreslolar, pishirilgan yoritish.
+- **Qorong'u o'rmon** (dark fantasy) - 512x512 m tungi o'rmon: gulxan atrofidagi to'nkalarda o'tirib mato
+  ekranda kino ko'rish, soy va ko'prik, uzoqdagi qasr, haqiqiy Oy (NASA), bulutlar, tuman, tabiat ovozlari;
+  o'yinchilar - ritsarlar (4 variant).
+
 ## Holat
 
 | Bosqich | Holat |
@@ -16,7 +22,8 @@ o'rindiq tanlab o'tirishadi va mikrofonda gaplashib birga tomosha qilishadi.
 | 6. Ekran ulashish (zal ekrani, jonli ekran nuri, stereo kino ovozi, to'liq ekran V) | ✅ |
 | 7. Ruxsatlar (presenter, kick, mute) | ⏳ |
 | 8. O'rindiqqa o'tirish (E), harakatlar (Q), fonar (F) | ✅ |
-| 9. Polish, optimizatsiya, deploy | ⏳ |
+| 9. Polish, optimizatsiya, deploy | ✅ |
+| O'rmon xaritasi: relyef, gulxan maydoni, olov, o'rmon, qasr, atmosfera, ritsarlar | ✅ |
 
 ## Ishga tushirish
 
@@ -50,6 +57,44 @@ Render -> New -> Blueprint -> shu repo; Render LiveKit Cloud kalitlarini so'rayd
 `LIVEKIT_URL` (`wss://....livekit.cloud`), `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`.
 Bepul tarifda 15 daqiqa kirilmasa servis uxlaydi — keyingi birinchi ochilish ~50 soniya.
 (`railway.json` — Railway'ga o'tilsa shu sozlama tayyor.)
+
+## O'rmon xaritasini qayta qurish (Blender)
+
+Xom manbalar git'ga kirmaydi; avval yuklab olinadi:
+
+```bash
+node tools/fetch-textures.mjs
+```
+
+```bash
+node tools/fetch-nature.mjs
+```
+
+```bash
+python -I tools/moon-textures.py
+```
+
+So'ng Blender skriptlari shu tartibda (`blender -b --factory-startup -P assets-src/blender/<skript>`):
+
+| Skript | Natija |
+|---|---|
+| `forest_terrain.py` | relyef (`terrain.bin/json`), splat, o'rmon zichligi, yo'l/soy/qasr joylari |
+| `forest_bridge.py` | soy ustidagi ko'prik |
+| `forest_camp.py` | gulxan maydoni, to'nkalar (o'rindiqlar - `layout.json`), mato ekran |
+| `forest_trees.py` | protsedural archa/qarag'aylar (LOD0, LOD1, impostor atlas) |
+| `forest_scatter.py` | Poly Haven modellarini soddalashtirish va xaritaga ekish (`nature.bin/json`) |
+| `forest_castle.py` | qasr |
+| `knight_build.py` | ritsar modeli, Rocketbox mocap'ini Mixamo skeletiga ko'chirish, lobbi rasmlari |
+
+Ritsar manbasi: Sketchfab'dan "Medieval Knight | Sculpture | Game ready" (GLB 4k) ->
+`assets-src/knight/knight.glb`. Tekshirish xaritasi: `python -I tools/terrain-map.py`.
+
+## Mualliflar va litsenziyalar
+
+- Ritsar: "Medieval Knight | Sculpture | Game ready" - by__Rx (Sketchfab), CC BY 4.0
+- Avatarlar va mocap: Microsoft Rocketbox, MIT
+- Teksturalar va o'simlik/qoya modellari: Poly Haven, CC0
+- Oy: NASA's Scientific Visualization Studio, CGI Moon Kit (LRO / LOLA), public domain
 
 ## Ovoz qanday ishlaydi
 
@@ -131,4 +176,5 @@ yoritiladi, shuning uchun ular zal bilan bir xil ko'rinadi va kuchsiz videokarta
 ## Boshqaruv
 
 `W A S D` yurish · `Shift` tez yurish · sichqoncha qarash · `E` o'rindiqqa o'tirish/turish, chiroq tugmasi ·
-`F` qo'l fonari · `M` mikrofon · `V` to'liq ekran · `Q` (bosib turing) harakatlar g'ildiragi yoki `1`–`9` · `0` harakatni to'xtatish · `Esc` menyu
+`F` qo'l fonari · `M` mikrofon · `V` to'liq ekran · `C` (bosib turing) yaqinlashtirish ·
+`Q` (bosib turing) harakatlar g'ildiragi yoki `1`–`9` · `0` harakatni to'xtatish · `Esc` menyu

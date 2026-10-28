@@ -34,8 +34,12 @@ function GraphicsFailed({ lost }: { lost?: boolean }) {
       <strong>{lost ? "3D grafika to'xtadi" : '3D grafika ishga tushmadi'}</strong>
       <span>
         Videokarta yoki xotira yetmadi. Ovozli suhbat ishlayveradi, ekran ulashilganda <kbd>V</kbd> bilan videoni
-        to'liq ekranda ko'rishingiz mumkin. Boshqa dasturlarni yopib, sahifani yangilang.
+        to'liq ekranda ko'rishingiz mumkin. Boshqa dasturlarni yopib, sahifani yangilang (grafika sifatini
+        "Past" qilish ham yordam beradi).
       </span>
+      <button className="primary" onClick={() => location.reload()}>
+        Sahifani yangilash
+      </button>
     </div>
   );
 }

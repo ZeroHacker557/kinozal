@@ -4,10 +4,15 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGame } from '../state/store';
 import { lightingState } from '../scene/lighting';
 import { remoteView } from '../avatar/remoteView';
+import { useMap } from '../scene/mapContext';
 
 const COLOR = new THREE.Color(1.0, 0.95, 0.86); // iliq LED
 const ANGLE = 0.4;
-const INTENSITY = 14;
+/** Fonar kuchi va yetish masofasi: zalda yumshoq, ochiq tungi o'rmonda kuchli (uzoqqa yetadi) */
+const BEAM = {
+  hall: { intensity: 14, range: 30, remoteRange: 25 },
+  forest: { intensity: 100, range: 65, remoteRange: 55 },
+};
 const REMOTE_SLOTS = 3;
 
 /**
@@ -98,23 +103,25 @@ export function Flashlights() {
   const quality = useGame((s) => s.quality);
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera);
+  const beamCfg = BEAM[useMap().id === 'forest' ? 'forest' : 'hall'];
+  const INTENSITY = beamCfg.intensity;
 
   const rig = useMemo(() => {
     const shadows = quality !== 'low';
-    const local = new THREE.SpotLight(COLOR, 0, 30, ANGLE, 0.35, 2);
+    const local = new THREE.SpotLight(COLOR, 0, beamCfg.range, ANGLE, 0.35, 2);
     local.position.set(0, -50, 0);
     local.target.position.set(0, -51, 0); // nol yo'nalish (NaN) bo'lmasligi uchun
     local.castShadow = shadows;
     if (shadows) {
       local.shadow.mapSize.setScalar(quality === 'high' ? 1024 : 512);
       local.shadow.camera.near = 0.15;
-      local.shadow.camera.far = 30;
+      local.shadow.camera.far = beamCfg.range;
       local.shadow.bias = -0.0004;
       local.shadow.normalBias = 0.03;
       local.map = createCookie(); // cookie faqat soyali chiroqda ishlaydi
     }
     const remote = Array.from({ length: REMOTE_SLOTS }, () => {
-      const l = new THREE.SpotLight(COLOR, 0, 25, ANGLE, 0.45, 2);
+      const l = new THREE.SpotLight(COLOR, 0, beamCfg.remoteRange, ANGLE, 0.45, 2);
       // Muhim: chiroq va nishon bir nuqtada bo'lsa yo'nalish nol vektor -> shaderda NaN va butun
       // sahna qora bo'lib qoladi (intensivlik 0 bo'lsa ham). Ishlatilmaganda pastga qaratib qo'yiladi.
       l.position.set(0, -50, 0);
@@ -123,7 +130,7 @@ export function Flashlights() {
       return { light: l, beam };
     });
     return { local, remote };
-  }, [quality]);
+  }, [quality, beamCfg]);
 
   useEffect(() => {
     const { local, remote } = rig;
