@@ -20,16 +20,36 @@ export function isMapId(v: unknown): v is MapId {
 }
 
 export const AVATARS = [
-  { id: 'Female_Adult_01', gender: 'f', label: 'Malika' },
-  { id: 'Female_Adult_04', gender: 'f', label: 'Dilnoza' },
-  { id: 'Female_Adult_13', gender: 'f', label: 'Sevara' },
-  { id: 'Female_Adult_17', gender: 'f', label: 'Nigora' },
-  { id: 'Male_Adult_02', gender: 'm', label: 'Aziz' },
-  { id: 'Male_Adult_04', gender: 'm', label: 'Jasur' },
-  { id: 'Male_Adult_06', gender: 'm', label: 'Bekzod' },
-  { id: 'Male_Adult_08', gender: 'm', label: 'Sardor' },
+  { id: 'Female_Adult_01', gender: 'f', label: 'Malika', kind: 'human' },
+  { id: 'Female_Adult_04', gender: 'f', label: 'Dilnoza', kind: 'human' },
+  { id: 'Female_Adult_13', gender: 'f', label: 'Sevara', kind: 'human' },
+  { id: 'Female_Adult_17', gender: 'f', label: 'Nigora', kind: 'human' },
+  { id: 'Male_Adult_02', gender: 'm', label: 'Aziz', kind: 'human' },
+  { id: 'Male_Adult_04', gender: 'm', label: 'Jasur', kind: 'human' },
+  { id: 'Male_Adult_06', gender: 'm', label: 'Bekzod', kind: 'human' },
+  { id: 'Male_Adult_08', gender: 'm', label: 'Sardor', kind: 'human' },
+  // O'rmon xaritasi ritsarlari (bitta model, metall va mato rangi bilan farqlanadi)
+  { id: 'Knight_Silver', gender: 'm', label: 'Kumush ritsar', kind: 'knight' },
+  { id: 'Knight_Black', gender: 'm', label: 'Qora ritsar', kind: 'knight' },
+  { id: 'Knight_Gold', gender: 'm', label: 'Oltin ritsar', kind: 'knight' },
+  { id: 'Knight_Rust', gender: 'm', label: 'Zang ritsar', kind: 'knight' },
 ] as const;
 export type AvatarId = (typeof AVATARS)[number]['id'];
+
+export function isKnight(id: AvatarId) {
+  return id.startsWith('Knight_');
+}
+
+/**
+ * Xaritada ko'rinadigan avatar: o'rmonda hamma ritsar (oddiy personaj tanlagan bo'lsa, unga mos
+ * ritsar varianti), zalda tanlangani.
+ */
+export function avatarForMap(id: AvatarId, map: MapId): AvatarId {
+  if (map !== 'forest' || isKnight(id)) return id;
+  const knights = AVATARS.filter((a) => a.kind === 'knight');
+  const i = AVATARS.findIndex((a) => a.id === id);
+  return knights[Math.max(0, i) % knights.length].id;
+}
 
 /**
  * Harakatlar (poza). Bir martalik: wave, cheer, laugh, shrug. Doimiy (harakatlanguncha): qolganlari.

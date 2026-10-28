@@ -92,7 +92,11 @@ export function createProbeUniforms(): ProbeUniforms {
  */
 export function applyProbeLighting(mat: THREE.MeshStandardMaterial, probe?: ProbeUniforms) {
   const instanced = !probe;
-  mat.onBeforeCompile = (shader) => {
+  // Materialning oldingi patchi (masalan ritsar rangi) saqlanadi
+  const prev = mat.onBeforeCompile;
+  const prevKey = mat.customProgramCacheKey.bind(mat);
+  mat.onBeforeCompile = (shader, renderer) => {
+    prev.call(mat, shader, renderer);
     shader.uniforms.uHouse = hallUniforms.uHouse;
     shader.uniforms.uScreenColor = hallUniforms.uScreenColor;
     if (probe) Object.assign(shader.uniforms, probe);
@@ -134,6 +138,6 @@ export function applyProbeLighting(mat: THREE.MeshStandardMaterial, probe?: Prob
         #endif`,
       );
   };
-  mat.customProgramCacheKey = () => (instanced ? 'probe-instanced-v1' : 'probe-uniform-v1');
+  mat.customProgramCacheKey = () => `${prevKey()}|${instanced ? 'probe-instanced-v1' : 'probe-uniform-v1'}`;
   mat.needsUpdate = true;
 }

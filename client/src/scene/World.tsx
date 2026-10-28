@@ -21,7 +21,7 @@ import { VoiceSpatial } from '../voice/VoiceSpatial';
 import { AvatarRig } from '../avatar/AvatarRig';
 import { loadAvatar } from '../avatar/assets';
 import { useActiveMap } from './mapContext';
-import type { MapId } from '@shared/protocol.ts';
+import { avatarForMap, type MapId } from '@shared/protocol.ts';
 
 // O'rmon xaritasi alohida bo'lak (chunk) - faqat tanlanganda yuklanadi
 const Forest = lazy(() => import('./forest/Forest'));
@@ -76,7 +76,7 @@ function Effects() {
  * Barcha shaderlarni oldindan, parallel kompilyatsiya qiladi. Windows'da (ANGLE/D3D11) har bir
  * shader 1-2 soniya kompilyatsiya bo'ladi - buni yuklanish ekranida qilmasak o'yin qotib qoladi.
  */
-function Precompile() {
+function Precompile({ map }: { map: MapId }) {
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera);
@@ -90,11 +90,12 @@ function Precompile() {
     const timeout = setTimeout(ready, 30000);
     // Avatar shaderlari ham oldindan tayyorlanadi (birinchi player kirganda qotmasligi uchun):
     // pol ostida vaqtinchalik avatar qo'yiladi
-    const dummy = new AvatarRig(useGame.getState().avatar, '');
+    const shown = avatarForMap(useGame.getState().avatar, map);
+    const dummy = new AvatarRig(shown, '');
     dummy.root.position.set(0, -40, 0);
     scene.add(dummy.root);
     let rt: THREE.WebGLRenderTarget | null = null;
-    loadAvatar(useGame.getState().avatar)
+    loadAvatar(shown)
       .catch(() => null)
       .then(() => new Promise((r) => setTimeout(r, 50)))
       .then(() => {
@@ -118,7 +119,7 @@ function Precompile() {
       clearTimeout(timeout);
       dummy.dispose();
     };
-  }, [gl, scene, camera, quality]);
+  }, [gl, scene, camera, quality, map]);
   return null;
 }
 
@@ -178,7 +179,7 @@ function MapWorld({ map }: { map: MapId }) {
         )}
       </Physics>
       <Effects />
-      <Precompile />
+      <Precompile map={map} />
     </>
   );
 }

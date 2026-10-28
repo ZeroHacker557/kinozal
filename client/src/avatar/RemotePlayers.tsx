@@ -9,17 +9,19 @@ import type { LightSample } from '../scene/probes';
 import { AvatarRig, type AvatarDrive } from './AvatarRig';
 import { remoteView } from './remoteView';
 import { useVoice } from '../voice/voiceStore';
+import { avatarForMap } from '@shared/protocol.ts';
 
 /** Xonadagi boshqa playerlar: realistik avatarlar, silliq harakat (interpolatsiya). */
 export function RemotePlayers() {
   const scene = useThree((s) => s.scene);
-  const map = useMap();
+  const mapData = useMap();
+  const mapId = mapData.id;
   const players = useRoom((s) => s.players);
   const selfId = useRoom((s) => s.selfId);
   const rigs = useRef(new Map<string, AvatarRig>());
   const seatById = useMemo(
-    () => new Map(map.seats.map((s) => [s.id, { pos: new THREE.Vector3(...s.position), yaw: seatYaw(s) }])),
-    [map],
+    () => new Map(mapData.seats.map((s) => [s.id, { pos: new THREE.Vector3(...s.position), yaw: seatYaw(s) }])),
+    [mapData],
   );
 
   // Player qo'shilganda/chiqqanda avatar yaratish/o'chirish
@@ -27,7 +29,7 @@ export function RemotePlayers() {
     const map = rigs.current;
     for (const [id, rig] of map) {
       const p = players[id];
-      if (!p || id === selfId || p.avatar !== rig.avatarId) {
+      if (!p || id === selfId || avatarForMap(p.avatar, mapId) !== rig.avatarId) {
         rig.dispose();
         map.delete(id);
         remoteView.delete(id);
@@ -35,11 +37,12 @@ export function RemotePlayers() {
     }
     for (const p of Object.values(players)) {
       if (p.id === selfId || map.has(p.id)) continue;
-      const rig = new AvatarRig(p.avatar, p.nickname);
+      // O'rmonda hamma ritsar: oddiy personaj tanlaganlarga mos ritsar varianti
+      const rig = new AvatarRig(avatarForMap(p.avatar, mapId), p.nickname);
       scene.add(rig.root);
       map.set(p.id, rig);
     }
-  }, [players, selfId, scene]);
+  }, [players, selfId, scene, mapId]);
 
   useEffect(
     () => () => {
@@ -86,7 +89,7 @@ export function RemotePlayers() {
       d.speed = i.speed;
       d.pose = meta.pose;
       d.poseAt = meta.poseAt;
-      rig.setLight(map.lookupLight(d.pos.x, d.pos.z, tmp.light));
+      rig.setLight(mapData.lookupLight(d.pos.x, d.pos.z, tmp.light));
       rig.update(Math.min(dt, 0.1), d, camera.position);
 
       let view = remoteView.get(id);

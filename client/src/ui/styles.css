@@ -150,6 +150,9 @@ button { font-family: inherit; cursor: pointer; }
 .avatar:hover { transform: translateY(-2px); }
 .avatar.active { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(216, 166, 87, 0.2); }
 @media (max-width: 420px) { .avatars { grid-template-columns: repeat(4, 1fr); } }
+.avatars.knight { grid-template-columns: repeat(4, 1fr); }
+.avatars.knight .avatar { aspect-ratio: 3 / 5; }
+.credits { font-size: 10.5px; line-height: 1.45; color: var(--muted); opacity: 0.75; }
 .maps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .map-card {
   display: flex; flex-direction: column; gap: 6px; padding: 6px 6px 8px; border: 2px solid transparent; border-radius: 12px;

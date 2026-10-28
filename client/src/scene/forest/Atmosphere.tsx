@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useGame } from '../../state/store';
 import { MOON_DIR } from './Sky';
 import type { TerrainData } from './terrainData';
 import { startNatureSounds, type NatureSounds } from '../../audio/natureSounds';
+import { avatarEnv } from '../../avatar/assets';
 
 /**
  * Tungi atmosfera: osmon gumbazi (ufq - to'q ko'k, tepasi - qora, oy atrofi yorug'roq), suzuvchi bulutlar
@@ -301,5 +302,52 @@ export function NatureAudio({ terrain }: { terrain: TerrainData }) {
     const nearCamp = Math.hypot(camera.position.x, camera.position.z) < 26;
     s.update(camera.position, tmp.stream, nearCamp);
   });
+  return null;
+}
+
+// ------------------------------------------------------------------ zirh aksi uchun muhit
+/**
+ * Ritsar zirhida aks etadigan osmon: qorong'i gradient va yorug' oy (PMREM). Faqat avatar
+ * materiallariga beriladi - qolgan sahna o'z yoritilishida qoladi.
+ */
+export function KnightEnv() {
+  const gl = useThree((s) => s.gl);
+  useMemo(() => {
+    const scene = new THREE.Scene();
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(50, 32, 16),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        uniforms: { uMoon: { value: MOON_DIR } },
+        vertexShader: 'varying vec3 vD; void main() { vD = position; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }',
+        fragmentShader: /* glsl */ `
+          uniform vec3 uMoon;
+          varying vec3 vD;
+          void main() {
+            vec3 d = normalize( vD );
+            vec3 c = mix( vec3( 0.03, 0.04, 0.06 ), vec3( 0.006, 0.008, 0.014 ), smoothstep( 0.0, 0.7, d.y ) );
+            c = mix( c, vec3( 0.012, 0.012, 0.01 ), smoothstep( 0.0, -0.3, d.y ) );
+            float m = max( dot( d, uMoon ), 0.0 );
+            c += vec3( 0.9, 0.95, 1.1 ) * smoothstep( 0.9975, 0.999, m ) * 6.0 + vec3( 0.08, 0.1, 0.14 ) * pow( m, 30.0 );
+            gl_FragColor = vec4( c, 1.0 );
+          }`,
+      }),
+    );
+    scene.add(sky);
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const rt = pmrem.fromScene(scene, 0);
+    avatarEnv.map?.dispose();
+    avatarEnv.map = rt.texture;
+    pmrem.dispose();
+    sky.geometry.dispose();
+    (sky.material as THREE.Material).dispose();
+  }, [gl]);
+  useEffect(
+    () => () => {
+      avatarEnv.map?.dispose();
+      avatarEnv.map = null;
+    },
+    [],
+  );
   return null;
 }

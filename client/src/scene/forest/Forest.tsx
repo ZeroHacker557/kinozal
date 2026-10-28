@@ -12,7 +12,7 @@ import { Fire } from './Fire';
 import { Nature } from './Nature';
 import { Sky } from './Sky';
 import { Castle } from './Castle';
-import { FOG_DENSITY, HORIZON, MoonLight, Mist, NatureAudio, SkyDome } from './Atmosphere';
+import { FOG_DENSITY, HORIZON, KnightEnv, MoonLight, Mist, NatureAudio, SkyDome } from './Atmosphere';
 
 /**
  * "Qorong'u o'rmon" xaritasi: 512x512 m relyef (Blender: forest_terrain.py), soy va ko'prik,
@@ -83,6 +83,7 @@ export function Forest({ children }: { children?: ReactNode }) {
       {/* Tungi osmon yorug'ligi (tepadan sovuq ko'k, pastdan deyarli qora) va oy nuri (soyali) */}
       <hemisphereLight args={['#22324f', '#0b0a09', 0.6]} />
       <MoonLight />
+      <KnightEnv />
       <SkyDome />
       <Sky />
       <Mist terrain={terrain} />

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProgress } from '@react-three/drei';
-import { AVATARS, MAPS, isValidRoomCode, MAX_PLAYERS } from '@shared/protocol.ts';
+import { AVATARS, MAPS, avatarForMap, isValidRoomCode, MAX_PLAYERS } from '@shared/protocol.ts';
 import { useActiveMap } from '../scene/mapContext';
 import { useAmbient } from '../audio/ambient';
 import { useGame, type Quality } from '../state/store';
@@ -84,10 +84,14 @@ function Loading() {
 function AvatarPicker() {
   const avatar = useGame((s) => s.avatar);
   const setAvatar = useGame((s) => s.setAvatar);
+  const map = useGame((s) => s.map);
+  // O'rmonda ritsarlar, zalda oddiy personajlar; tanlangani shu xaritada qanday ko'rinsa, o'sha belgilanadi
+  const kind = map === 'forest' ? 'knight' : 'human';
+  const shown = avatarForMap(avatar, map);
   return (
-    <div className="avatars">
-      {AVATARS.map((a) => (
-        <button key={a.id} className={`avatar ${a.id === avatar ? 'active' : ''}`} onClick={() => setAvatar(a.id)} title={a.label}>
+    <div className={`avatars ${kind}`}>
+      {AVATARS.filter((a) => a.kind === kind).map((a) => (
+        <button key={a.id} className={`avatar ${a.id === shown ? 'active' : ''}`} onClick={() => setAvatar(a.id)} title={a.label}>
           <img src={`/avatars/${a.id}/thumb.jpg`} alt={a.label} draggable={false} />
         </button>
       ))}
@@ -184,6 +188,10 @@ function Lobby() {
         </button>
         <QualityPicker />
         <Controls />
+        <div className="credits">
+          Ritsar: "Medieval Knight | Sculpture" — by__Rx (Sketchfab, CC BY 4.0) · Avatarlar: Microsoft Rocketbox (MIT) ·
+          Teksturalar va modellar: Poly Haven (CC0) · Oy: NASA SVS
+        </div>
       </div>
     </div>
   );
@@ -224,7 +232,7 @@ function RoomPanel() {
         </span>
         {list.map((p) => (
           <div key={p.id} className="player-row">
-            <img src={`/avatars/${p.avatar}/thumb.jpg`} alt="" />
+            <img src={`/avatars/${avatarForMap(p.avatar, room.mapId)}/thumb.jpg`} alt="" />
             <span className="name">
               {p.nickname}
               {p.id === selfId && <em> (siz)</em>}

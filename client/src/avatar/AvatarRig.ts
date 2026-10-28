@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ONE_SHOT_POSES, type AvatarId, type Pose } from '@shared/protocol.ts';
-import { genderOf, instantiate, loadAvatar, loadClip, type ClipName } from './assets';
+import { applyKnightTint, instantiate, loadAvatar, loadClip, rigOf, type ClipName, type RigKind } from './assets';
 import { applyProbeLighting, createProbeUniforms, type ProbeUniforms } from '../scene/lighting';
 import type { LightSample } from '../scene/probes';
 
@@ -28,9 +28,24 @@ const FADE = 0.35;
 const SEAT_PELVIS = new THREE.Vector3(0, 0.62, -0.02);
 /** Yotganda tana qalinligining yarmi (orqa polga tegishi uchun) */
 const LIE_LIFT = 0.12;
-/** Asosiy o'tirish - suyanchiqqa suyanib; vaqti-vaqti bilan tabiiy harakatlar */
-const SIT_BASE: ClipName = 'sit_relaxed';
-const SIT_VARIANTS: ClipName[] = ['sit', 'sit_look', 'sit_yawn'];
+/**
+ * Asosiy o'tirish: kino zalida kresloga suyanib, vaqti-vaqti bilan tabiiy harakatlar.
+ * Ritsar (o'rmonda to'nkada, suyanchiqsiz) - tik o'tiradi.
+ */
+const SIT: Record<'human' | 'knight', { base: ClipName; variants: ClipName[] }> = {
+  human: { base: 'sit_relaxed', variants: ['sit', 'sit_look', 'sit_yawn'] },
+  knight: { base: 'sit', variants: [] },
+};
+/** Ritsar uzoqlashganda soddalashtirilgan modelga o'tish masofasi (m) */
+const LOD_DIST = 14;
+
+/** Suyaklar: Rocketbox (Bip01) va ritsar (Mixamo; glTF nomlaridan ':' olib tashlanadi) */
+const BONES = {
+  head: /^(Bip01_Head|mixamorigHead_\d+)$/,
+  neck: /^(Bip01_Neck|mixamorigNeck_\d+)$/,
+  rHand: /^(Bip01_R_Hand|mixamorigRightHand_\d+)$/,
+  pelvis: /^(Bip01_Pelvis|mixamorigHips_\d+)$/,
+};
 
 function angleDiff(a: number, b: number) {
   let d = a - b;
@@ -156,7 +171,9 @@ export class AvatarRig {
   private tmpV = new THREE.Vector3();
   private tmpTarget = new THREE.Vector3();
   private probe: ProbeUniforms = createProbeUniforms();
-  private gender: 'm' | 'f';
+  private rig: RigKind;
+  private lods: THREE.Object3D[][] = [[], []];
+  private lodLevel = -1;
   private nameplate;
   private oneShotDoneAt = -1;
   private sitVariantAt = 0;
@@ -170,7 +187,7 @@ export class AvatarRig {
   readonly handPos = new THREE.Vector3();
 
   constructor(readonly avatarId: AvatarId, nickname: string) {
-    this.gender = genderOf(avatarId);
+    this.rig = rigOf(avatarId);
     this.nameplate = createNameplate(nickname);
     this.root.add(this.nameplate.sprite);
     this.root.add(this.contact);
@@ -180,17 +197,23 @@ export class AvatarRig {
       model.traverse((o) => {
         const m = o as THREE.SkinnedMesh;
         if (m.isMesh) {
-          const mat = (m.material as THREE.MeshStandardMaterial).clone();
-          applyProbeLighting(mat, this.probe);
-          m.material = mat;
+          const list = Array.isArray(m.material) ? m.material : [m.material];
+          const mats = list.map((src) => {
+            const mat = (src as THREE.MeshStandardMaterial).clone();
+            if (this.rig === 'knight') applyKnightTint(mat, avatarId);
+            applyProbeLighting(mat, this.probe);
+            return mat;
+          });
+          m.material = Array.isArray(m.material) ? mats : mats[0];
           // Oy, gulxan va fonar nurida odamning soyasi
           m.castShadow = true;
+          if (this.rig === 'knight') this.lods[m.userData.lod === 1 ? 1 : 0].push(m);
         }
         if ((o as THREE.Bone).isBone) {
-          if (o.name === 'Bip01_Head') this.head = o as THREE.Bone;
-          if (o.name === 'Bip01_Neck') this.neck = o as THREE.Bone;
-          if (o.name === 'Bip01_R_Hand') this.rHand = o as THREE.Bone;
-          if (o.name === 'Bip01_Pelvis') this.pelvis = o as THREE.Bone;
+          if (BONES.head.test(o.name)) this.head = o as THREE.Bone;
+          if (BONES.neck.test(o.name)) this.neck = o as THREE.Bone;
+          if (BONES.rHand.test(o.name)) this.rHand = o as THREE.Bone;
+          if (BONES.pelvis.test(o.name)) this.pelvis = o as THREE.Bone;
         }
       });
       this.model = model;
@@ -227,7 +250,7 @@ export class AvatarRig {
     if (a) return a;
     if (this.mixer && !this.loading.has(name)) {
       this.loading.add(name);
-      loadClip(this.gender, name).then((clip) => {
+      loadClip(this.rig, name).then((clip) => {
         if (this.disposed || !this.mixer) return;
         this.actions.set(name, this.mixer.clipAction(clip));
       });
@@ -277,15 +300,27 @@ export class AvatarRig {
     this.contact.position.set(0, 0.012, -0.8 * this.lie);
     this.contact.scale.set(0.8 + 0.1 * this.lie, 1, 0.8 + 1.3 * this.lie);
 
+    // Ritsar: uzoqda soddalashtirilgan model (ozgina oraliq bilan - chegarada miltillamasin)
+    if (this.rig === 'knight' && this.lods[1].length) {
+      const dist = cameraPos.distanceTo(this.root.position);
+      const want = this.lodLevel === 1 ? (dist < LOD_DIST - 1.5 ? 0 : 1) : dist > LOD_DIST + 1.5 ? 1 : 0;
+      if (want !== this.lodLevel) {
+        this.lodLevel = want;
+        for (const m of this.lods[0]) m.visible = want === 0;
+        for (const m of this.lods[1]) m.visible = want === 1;
+      }
+    }
+
     if (this.mixer) {
       const now = performance.now();
+      const sit = SIT[this.rig === 'knight' ? 'knight' : 'human'];
       if (d.seated) {
-        if (now > this.sitVariantAt && this.current?.name === SIT_BASE) {
+        if (sit.variants.length && now > this.sitVariantAt && this.current?.name === sit.base) {
           // Vaqti-vaqti bilan tabiiy harakatlar (atrofga qarash, esnash...)
-          this.play(SIT_VARIANTS[Math.floor(Math.random() * SIT_VARIANTS.length)], { once: true, fade: 0.6 });
+          this.play(sit.variants[Math.floor(Math.random() * sit.variants.length)], { once: true, fade: 0.6 });
           this.sitVariantAt = now + 12000 + Math.random() * 15000;
-        } else if (this.current?.name !== SIT_BASE && (!SIT_VARIANTS.includes(this.current?.name as ClipName) || this.finished())) {
-          this.play(SIT_BASE, { fade: 0.6 });
+        } else if (this.current?.name !== sit.base && (!sit.variants.includes(this.current?.name as ClipName) || this.finished())) {
+          this.play(sit.base, { fade: 0.6 });
           if (!this.sitVariantAt) this.sitVariantAt = now + 8000 + Math.random() * 10000;
         }
       } else if (d.pose && !(ONE_SHOT_POSES.includes(d.pose) && this.oneShotDoneAt === d.poseAt)) {
